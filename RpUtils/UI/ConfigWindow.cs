@@ -1,43 +1,35 @@
-﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
-using RpUtils.Services;
+using RpUtils.UI;
 using System.Threading.Tasks;
 
 namespace RpUtils.UI.Windows;
 
 public class ConfigWindow : Window
 {
-    private readonly Configuration _configuration;
-    private readonly IConnectionStatus _connectionStatus;
-
-    public ConfigWindow(Configuration configuration, IConnectionStatus connectionStatus) : base("RpUtils Configuration")
+    public ConfigWindow() : base("RpUtils Configuration")
     {
-        Flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-                ImGuiWindowFlags.NoScrollWithMouse;
-
-        _configuration = configuration;
-        _connectionStatus = connectionStatus;
+        Flags = Theme.CompactWindowFlags;
     }
 
     public override void Draw()
     {
-        var enableRpUtils = _configuration.EnableRpUtils;
+        var config = Plugin.Configuration;
+        var enableRpUtils = config.EnableRpUtils;
         if (ImGui.Checkbox("Enable RpUtils Connection", ref enableRpUtils))
         {
-            
-            _configuration.EnableRpUtils = enableRpUtils;
-            _configuration.Save();
+            config.EnableRpUtils = enableRpUtils;
+            config.Save();
             Task.Run(async () =>
             {
                 if (enableRpUtils)
                 {
-                    await _connectionStatus.ConnectAsync();
+                    await Plugin.ConnectionStatus.ConnectAsync();
                 }
                 else
                 {
-                    await _connectionStatus.DisconnectAsync();
+                    await Plugin.ConnectionStatus.DisconnectAsync();
                 }
-
             });
         }
         if (ImGui.IsItemHovered())

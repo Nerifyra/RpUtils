@@ -1,43 +1,35 @@
-﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using RpUtils.Features.Sonar;
 using RpUtils.Features.Sonar.Models;
 using RpUtils.Models;
-using RpUtils.Services;
+using RpUtils.UI;
 using System.Threading.Tasks;
 
 namespace RpUtils.Features.Sonar.UI;
 
 internal class ShareLocationWindow : Window
 {
-    private readonly IConnectionStatus _connectionStatus;
-    private readonly ISonarController _sonarController;
-
-    public ShareLocationWindow(IConnectionStatus connectionStatus, ISonarController sonarController) : base("Share Roleplay Location")
+    public ShareLocationWindow() : base("Share Roleplay Location")
     {
-        Flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-        ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize;
-
+        Flags = Theme.CompactWindowFlags;
         IsOpen = false;
-        _connectionStatus = connectionStatus;
-        _sonarController = sonarController;
     }
 
     private void DrawActivitySelection()
     {
-        var selected = SonarActivity.DisplayName(_sonarController.CurrentActivity);
+        var sonar = Plugin.Sonar;
+        var selected = SonarActivity.DisplayName(sonar.CurrentActivity);
 
         using var combo = ImRaii.Combo("##RoleplayActivity", selected);
         if (!combo) return;
 
         foreach (var activity in SonarActivity.All)
         {
-            var isSelected = activity == _sonarController.CurrentActivity;
+            var isSelected = activity == sonar.CurrentActivity;
             if (ImGui.Selectable(SonarActivity.DisplayName(activity), isSelected))
             {
-                var act = activity;
-                _sonarController.SetActivity(act);
+                sonar.SetActivity(activity);
             }
             if (isSelected)
             {
@@ -48,17 +40,18 @@ internal class ShareLocationWindow : Window
 
     public override void Draw()
     {
-        var isSharing = _sonarController.IsSharingLocation;
-        var isConnected = _connectionStatus.Status == ConnectionState.Connected;
+        var sonar = Plugin.Sonar;
+        var isSharing = sonar.IsSharingLocation;
+        var isConnected = Plugin.ConnectionStatus.Status == ConnectionState.Connected;
         using var disabled = ImRaii.Disabled(!isConnected);
         if (ImGui.Checkbox("Share Roleplay Location", ref isSharing))
         {
             Task.Run(async () =>
             {
                 if (isSharing)
-                    await _sonarController.StartSharing();
+                    await sonar.StartSharing();
                 else
-                    await _sonarController.StopSharing();
+                    await sonar.StopSharing();
             });
         }
         if (ImGui.IsItemHovered())

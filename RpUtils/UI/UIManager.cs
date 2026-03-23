@@ -1,8 +1,5 @@
-﻿using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
-using RpUtils.Features.Sonar;
+using Dalamud.Interface.Windowing;
 using RpUtils.Features.Sonar.UI;
-using RpUtils.Services;
 using RpUtils.UI.Windows;
 using System;
 
@@ -11,6 +8,8 @@ namespace RpUtils.UI;
 public sealed class UIManager : IDisposable
 {
     private readonly WindowSystem _windowSystem = new("RpUtils");
+    public Fonts Fonts { get; }
+
 
     private readonly ConfigWindow _configWindow;
     private readonly ToolbarWindow _toolbarWindow;
@@ -18,16 +17,18 @@ public sealed class UIManager : IDisposable
     private readonly ShareLocationWindow _shareLocationWindow;
     private readonly FindRoleplayWindow _findRoleplayWindow;
 
-    public UIManager(Configuration configuration, IConnectionStatus connectionStatus, ISonarController sonarController)
+    public UIManager()
     {
-        _configWindow = new ConfigWindow(configuration, connectionStatus);
+        // Fonts
+        Fonts = new Fonts();
+        Fonts.Initialize();
+
+        // Windows
+        _configWindow = new ConfigWindow();
         _lobbyWindow = new LobbyWindow();
-        _shareLocationWindow = new ShareLocationWindow(connectionStatus, sonarController);
-        _findRoleplayWindow = new FindRoleplayWindow(sonarController);
+        _shareLocationWindow = new ShareLocationWindow();
+        _findRoleplayWindow = new FindRoleplayWindow();
         _toolbarWindow = new ToolbarWindow(
-            configuration,
-            connectionStatus,
-            sonarController,
             () => _shareLocationWindow.Toggle(),
             () => _findRoleplayWindow.Toggle(),
             () => _lobbyWindow.Toggle(),
@@ -48,5 +49,6 @@ public sealed class UIManager : IDisposable
     public void Dispose()
     {
         _windowSystem.RemoveAllWindows();
+        Fonts.Dispose();
     }
 }

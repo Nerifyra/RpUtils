@@ -23,25 +23,31 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
 
+    internal static Configuration Configuration { get; private set; } = null!;
+    internal static IConnectionStatus ConnectionStatus { get; private set; } = null!;
+    internal static ISonarController Sonar { get; private set; } = null!;
+    internal static UIManager UI { get; private set; } = null!;
+
     private const string CommandName = "/rputils";
 
-    private readonly Configuration _configuration;
     private readonly HubConnectionService _hub;
     private readonly SonarService _sonarService;
     private readonly SonarController _sonarController;
-    private readonly UIManager _ui;
 
     public Plugin()
     {
-        _configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        
+        Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+
         // Services
-        _hub = new HubConnectionService(_configuration);
+        _hub = new HubConnectionService();
         _sonarService = new SonarService(_hub);
         _sonarController = new SonarController(_sonarService);
 
+        ConnectionStatus = _hub;
+        Sonar = _sonarController;
+
         // UI
-        _ui = new UIManager(_configuration, _hub, _sonarController);
+        UI = new UIManager();
 
         // Commands
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
@@ -49,22 +55,22 @@ public sealed class Plugin : IDalamudPlugin
             HelpMessage = "Toggle the display of the Rp Utils toolbar."
         });
 
-        PluginInterface.UiBuilder.Draw += _ui.Draw;
-        PluginInterface.UiBuilder.OpenConfigUi += _ui.ToggleConfigWindow;
-        PluginInterface.UiBuilder.OpenMainUi += _ui.ToggleToolbarWindow;
+        PluginInterface.UiBuilder.Draw += UI.Draw;
+        PluginInterface.UiBuilder.OpenConfigUi += UI.ToggleConfigWindow;
+        PluginInterface.UiBuilder.OpenMainUi += UI.ToggleToolbarWindow;
 
         Task.Run(async () => await _hub.ConnectAsync());
     }
 
     public void Dispose()
     {
-        PluginInterface.UiBuilder.Draw -= _ui.Draw;
-        PluginInterface.UiBuilder.OpenConfigUi -= _ui.ToggleConfigWindow;
-        PluginInterface.UiBuilder.OpenMainUi -= _ui.ToggleToolbarWindow;
+        PluginInterface.UiBuilder.Draw -= UI.Draw;
+        PluginInterface.UiBuilder.OpenConfigUi -= UI.ToggleConfigWindow;
+        PluginInterface.UiBuilder.OpenMainUi -= UI.ToggleToolbarWindow;
 
         CommandManager.RemoveHandler(CommandName);
 
-        _ui.Dispose();
+        UI.Dispose();
         _sonarController.Dispose();
         _hub.DisposeAsync().AsTask().Wait();
     }
@@ -72,6 +78,6 @@ public sealed class Plugin : IDalamudPlugin
     private void OnCommand(string command, string args)
     {
         Log.Debug($"OnCommand {command}: {args}");
-        _ui.ToggleToolbarWindow();
+        UI.ToggleToolbarWindow();
     }
 }

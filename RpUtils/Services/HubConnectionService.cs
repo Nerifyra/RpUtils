@@ -12,7 +12,6 @@ namespace RpUtils.Services;
 public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
 {
     private HubConnection? _connection;
-    private readonly Configuration _configuration;
     private readonly CancellationTokenSource _cts = new();
 
     public event Action<HubConnection>? OnConnected;
@@ -22,18 +21,13 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
     public ConnectionState Status { get; private set; } = ConnectionState.Disconnected;
     public event Action<ConnectionState>? OnStatusChanged;
 
-    public HubConnectionService(Configuration configuration)
-    {
-        _configuration = configuration;
-    }
-
     public HubConnection? Connection => _connection;
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
     public async Task ConnectAsync()
     {
         // If user has disabled RpUtils in the config, we don't connect
-        if (!_configuration.EnableRpUtils)
+        if (!Plugin.Configuration.EnableRpUtils)
         {
             Plugin.Log.Info("RpUtils is disabled in configuration, skipping connection.");
             SetStatus(ConnectionState.Disabled);
@@ -136,7 +130,7 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         {
             await _connection.DisposeAsync();
             _connection = null;
-            SetStatus(_configuration.EnableRpUtils ? ConnectionState.Disconnected : ConnectionState.Disabled);
+            SetStatus(Plugin.Configuration.EnableRpUtils ? ConnectionState.Disconnected : ConnectionState.Disabled);
         }
     }
 
