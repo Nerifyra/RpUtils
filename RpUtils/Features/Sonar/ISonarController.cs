@@ -1,9 +1,9 @@
-﻿using RpUtils.Sonar.Models;
+﻿using RpUtils.Features.Sonar.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace RpUtils.Sonar;
+namespace RpUtils.Features.Sonar;
 
 public interface ISonarController
 {

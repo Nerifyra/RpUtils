@@ -2,8 +2,8 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using RpUtils.Features.Sonar;
 using RpUtils.Services;
-using RpUtils.Sonar;
 using RpUtils.UI;
 using System.Threading.Tasks;
 

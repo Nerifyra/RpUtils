@@ -1,12 +1,12 @@
 ﻿using Dalamud.Plugin.Services;
 using Microsoft.AspNetCore.SignalR.Client;
+using RpUtils.Features.Sonar.Models;
 using RpUtils.Services;
-using RpUtils.Sonar.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace RpUtils.Sonar;
+namespace RpUtils.Features.Sonar;
 
 public sealed class SonarService
 {

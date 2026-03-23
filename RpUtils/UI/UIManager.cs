@@ -1,7 +1,8 @@
 ﻿using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using RpUtils.Features.Sonar;
+using RpUtils.Features.Sonar.UI;
 using RpUtils.Services;
-using RpUtils.Sonar;
 using RpUtils.UI.Windows;
 using System;
 

@@ -5,9 +5,9 @@ using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using RpUtils.Features.Sonar;
 using RpUtils.Models;
 using RpUtils.Services;
-using RpUtils.Sonar;
 using System;
 using System.Numerics;
 

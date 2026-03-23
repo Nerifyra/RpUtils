@@ -1,13 +1,13 @@
 ﻿using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using RpUtils.Features.Sonar;
+using RpUtils.Features.Sonar.Models;
 using RpUtils.Models;
 using RpUtils.Services;
-using RpUtils.Sonar;
-using RpUtils.Sonar.Models;
 using System.Threading.Tasks;
 
-namespace RpUtils.UI.Windows;
+namespace RpUtils.Features.Sonar.UI;
 
 internal class ShareLocationWindow : Window
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace RpUtils.Sonar.Models;
+namespace RpUtils.Features.Sonar.Models;
 
 public class WorldMapGroup
 {
