@@ -39,6 +39,15 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
+    public async Task UpdateEncounter(string lobbyId, string encounterId, string name, List<string> playerIds)
+    {
+        var success = await _service.UpdateEncounter(lobbyId, encounterId, name, playerIds);
+        if (!success)
+        {
+            ShowError("Failed to update encounter.");
+        }
+    }
+
     public async Task RefreshEncounters(string lobbyId)
     {
         try

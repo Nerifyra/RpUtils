@@ -63,7 +63,7 @@ internal class EncountersTab
 
         foreach (var (encounterId, encounter) in encounters)
         {
-            _encounterDetailTab.Draw(encounterId, encounter, lobby);
+            _encounterDetailTab.Draw(encounterId, encounter, lobby, _encounterPopup);
         }
 
         if (lobby.IsModeratorOrAbove)

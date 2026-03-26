@@ -15,19 +15,19 @@ internal class EncounterDetailTab
 {
     private readonly Dictionary<string, int> _initiativeBuffers = [];
 
-    public void Draw(string encounterId, EncounterState encounter, Lobby lobby)
+    public void Draw(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
     {
         using var tab = ImRaii.TabItem($"{encounter.Name}##{encounterId}");
         if (!tab.Success) return;
 
-        DrawControls(encounterId, encounter, lobby);
+        DrawControls(encounterId, encounter, lobby, editPopup);
 
         ImGui.Separator();
 
         DrawParticipantsTable(encounterId, encounter);
     }
 
-    private void DrawControls(string encounterId, EncounterState encounter, Lobby lobby)
+    private void DrawControls(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
     {
         var isDm = lobby.IsModeratorOrAbove;
         var currentParticipant = encounter.Participants.FirstOrDefault(p => p.IsCurrent);
@@ -66,8 +66,21 @@ internal class EncounterDetailTab
             ImGui.SameLine();
             if (ImGuiComponents.IconButton($"##{encounterId}_menu", FontAwesomeIcon.EllipsisV))
             {
-                // Context menu
+                ImGui.OpenPopup($"EncounterMenu##{encounterId}");
             }
+
+            DrawContextMenu(encounterId, encounter, lobby, editPopup);
+        }
+    }
+
+    private void DrawContextMenu(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
+    {
+        using var popup = ImRaii.Popup($"EncounterMenu##{encounterId}");
+        if (!popup.Success) return;
+
+        if (ImGui.MenuItem("Edit Encounter"))
+        {
+            editPopup.OpenForEdit(lobby, encounter);
         }
     }
 

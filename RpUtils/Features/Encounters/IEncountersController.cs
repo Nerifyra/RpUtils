@@ -12,5 +12,6 @@ public interface IEncountersController
     event Action? OnStateChanged;
 
     Task CreateEncounter(string lobbyId, string name, List<string> playerIds);
+    Task UpdateEncounter(string lobbyId, string encounterId, string name, List<string> playerIds);
     Task RefreshEncounters(string lobbyId);
 }
