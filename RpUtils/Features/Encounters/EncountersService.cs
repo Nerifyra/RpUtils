@@ -102,6 +102,36 @@ public sealed class EncountersService
         }
     }
 
+    public async Task<bool> RemoveNpcParticipant(string encounterId, string participantId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("RemoveNpcParticipant", encounterId, participantId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to remove NPC participant.");
+            return false;
+        }
+    }
+
+    public async Task<bool> RenameNpcParticipant(string encounterId, string participantId, string newDisplayName)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("RenameNpcParticipant", encounterId, participantId, newDisplayName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to rename NPC participant.");
+            return false;
+        }
+    }
+
     public async Task<bool> EndEncounter(string encounterId)
     {
         try

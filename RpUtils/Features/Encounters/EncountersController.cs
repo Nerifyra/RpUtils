@@ -91,6 +91,24 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
+    public async Task RemoveNpcParticipant(string encounterId, string participantId)
+    {
+        var success = await _service.RemoveNpcParticipant(encounterId, participantId);
+        if (!success)
+        {
+            ShowError("Failed to remove NPC.");
+        }
+    }
+
+    public async Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName)
+    {
+        var success = await _service.RenameNpcParticipant(encounterId, participantId, newDisplayName);
+        if (!success)
+        {
+            ShowError("Failed to rename NPC.");
+        }
+    }
+
     public async Task EndEncounter(string encounterId)
     {
         var success = await _service.EndEncounter(encounterId);

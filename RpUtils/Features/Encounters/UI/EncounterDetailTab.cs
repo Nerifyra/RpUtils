@@ -17,6 +17,9 @@ internal class EncounterDetailTab
     private readonly HashSet<string> _activeInputs = [];
     private string _npcNameBuffer = string.Empty;
     private bool _openNpcPopup;
+    private string _renameNpcBuffer = string.Empty;
+    private string? _pendingRenameNpcId;
+    private string? _activeRenameNpcId;
 
     public void Draw(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
     {
@@ -148,6 +151,9 @@ internal class EncounterDetailTab
         {
             DrawParticipantRow(encounterId, participant, lobby.IsModeratorOrAbove);
         }
+
+        // Deferred rename popup (must be at the same ID stack level)
+        DrawRenameNpcPopup(encounterId);
     }
 
     private void DrawParticipantRow(string encounterId, EncounterParticipant participant, bool isDm)
@@ -155,6 +161,12 @@ internal class EncounterDetailTab
         ImGui.TableNextRow();
 
         ImGui.TableNextColumn();
+
+        // Invisible selectable spanning the full cell for right-click target
+        ImGui.Selectable($"##Row{participant.ParticipantId}", false, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap);
+        var rowContextTarget = ImGui.IsItemClicked(ImGuiMouseButton.Right);
+        ImGui.SameLine(0, 0);
+
         if (participant.IsCurrent)
         {
             using (ImRaii.PushFont(UiBuilder.IconFont))
@@ -164,6 +176,30 @@ internal class EncounterDetailTab
             ImGui.SameLine();
         }
         ImGui.Text(participant.DisplayName);
+
+        // NPC context menu on the name column
+        if (isDm && participant.IsNpc)
+        {
+            if (rowContextTarget)
+                ImGui.OpenPopup($"NpcMenu##{participant.ParticipantId}");
+
+            using (var popup = ImRaii.Popup($"NpcMenu##{participant.ParticipantId}"))
+            {
+                if (popup.Success)
+                {
+                    if (ImGui.MenuItem("Rename NPC"))
+                    {
+                        _renameNpcBuffer = participant.DisplayName;
+                        _pendingRenameNpcId = participant.ParticipantId;
+                    }
+
+                    if (ImGui.MenuItem("Remove NPC"))
+                    {
+                        Plugin.Encounters.RemoveNpcParticipant(encounterId, participant.ParticipantId);
+                    }
+                }
+            }
+        }
 
         ImGui.TableNextColumn();
         var serverValue = participant.Initiative ?? 0;
@@ -197,6 +233,34 @@ internal class EncounterDetailTab
             else if (!ImGui.IsItemActive())
             {
                 _activeInputs.Remove(participant.ParticipantId);
+            }
+        }
+    }
+
+    private void DrawRenameNpcPopup(string encounterId)
+    {
+        if (_pendingRenameNpcId != null)
+        {
+            _activeRenameNpcId = _pendingRenameNpcId;
+            _pendingRenameNpcId = null;
+            ImGui.OpenPopup($"RenameNpc##{encounterId}");
+        }
+
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(250, 0), ImGuiCond.Always);
+        using var popup = ImRaii.Popup($"RenameNpc##{encounterId}");
+        if (!popup.Success) return;
+
+        ImGui.Text("New Name");
+        ImGui.SetNextItemWidth(-1);
+        var submit = ImGui.InputText($"##RenameNpcInput{encounterId}", ref _renameNpcBuffer, 64, ImGuiInputTextFlags.EnterReturnsTrue);
+
+        if (submit || ImGui.Button("Rename", new System.Numerics.Vector2(-1, 0)))
+        {
+            if (!string.IsNullOrWhiteSpace(_renameNpcBuffer) && _activeRenameNpcId != null)
+            {
+                Plugin.Encounters.RenameNpcParticipant(encounterId, _activeRenameNpcId, _renameNpcBuffer.Trim());
+                _activeRenameNpcId = null;
+                ImGui.CloseCurrentPopup();
             }
         }
     }

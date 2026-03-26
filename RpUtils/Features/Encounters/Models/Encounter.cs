@@ -18,4 +18,5 @@ public class EncounterParticipant
     public string DisplayName { get; set; } = string.Empty;
     public int? Initiative { get; set; }
     public bool IsCurrent { get; set; }
+    public bool IsNpc { get; set; }
 }

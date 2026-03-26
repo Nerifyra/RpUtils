@@ -17,6 +17,8 @@ public interface IEncountersController
     Task ReverseTurn(string encounterId);
     Task SetInitiative(string encounterId, string participantId, int value);
     Task AddNpcParticipant(string encounterId, string displayName);
+    Task RemoveNpcParticipant(string encounterId, string participantId);
+    Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName);
     Task EndEncounter(string encounterId);
     Task RefreshEncounters(string lobbyId);
 }
