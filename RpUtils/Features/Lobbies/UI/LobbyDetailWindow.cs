@@ -57,7 +57,7 @@ internal class LobbyDetailWindow : Window
         if (!tabBar.Success) return;
 
         _manageTab.Draw(lobby);
-        _encountersTab.Draw();
+        _encountersTab.Draw(lobby);
     }
 
     private void DrawHeader(Lobby lobby)
