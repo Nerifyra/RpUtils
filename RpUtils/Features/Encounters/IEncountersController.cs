@@ -13,6 +13,8 @@ public interface IEncountersController
 
     Task CreateEncounter(string lobbyId, string name, List<string> playerIds);
     Task UpdateEncounter(string lobbyId, string encounterId, string name, List<string> playerIds);
+    Task AdvanceTurn(string encounterId);
+    Task ReverseTurn(string encounterId);
     Task EndEncounter(string encounterId);
     Task RefreshEncounters(string lobbyId);
 }

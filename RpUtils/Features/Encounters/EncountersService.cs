@@ -41,6 +41,36 @@ public sealed class EncountersService
         }
     }
 
+    public async Task<bool> ReverseTurn(string encounterId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("ReverseTurn", encounterId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to reverse turn.");
+            return false;
+        }
+    }
+
+    public async Task<bool> AdvanceTurn(string encounterId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("AdvanceTurn", encounterId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to advance turn.");
+            return false;
+        }
+    }
+
     public async Task<bool> EndEncounter(string encounterId)
     {
         try

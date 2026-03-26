@@ -55,6 +55,24 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
+    public async Task ReverseTurn(string encounterId)
+    {
+        var success = await _service.ReverseTurn(encounterId);
+        if (!success)
+        {
+            ShowError("Failed to reverse turn.");
+        }
+    }
+
+    public async Task AdvanceTurn(string encounterId)
+    {
+        var success = await _service.AdvanceTurn(encounterId);
+        if (!success)
+        {
+            ShowError("Failed to advance turn.");
+        }
+    }
+
     public async Task EndEncounter(string encounterId)
     {
         var success = await _service.EndEncounter(encounterId);

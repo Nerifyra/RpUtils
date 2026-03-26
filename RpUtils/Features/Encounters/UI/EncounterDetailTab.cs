@@ -35,23 +35,23 @@ internal class EncounterDetailTab
 
         var buttonSize = ImGui.GetFrameHeight();
         var spacing = ImGui.GetStyle().ItemSpacing.X;
-        var totalWidth = buttonSize * 4 + spacing * 3;
+        var totalWidth = buttonSize * 5 + spacing * 4;
         ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - totalWidth) * 0.5f);
 
         using (ImRaii.Disabled(!isDm))
         {
-            if (ImGuiComponents.IconButton($"##{encounterId}_prev", FontAwesomeIcon.ChevronLeft))
+            if (ImGuiComponents.IconButton($"##{encounterId}_add", FontAwesomeIcon.Plus))
             {
-                // Previous turn
+                // Adding NPC
             }
         }
 
         ImGui.SameLine();
-        using (ImRaii.Disabled(!isDm && !isMyTurn))
+        using (ImRaii.Disabled(!isDm))
         {
-            if (ImGuiComponents.IconButton($"##{encounterId}_next", FontAwesomeIcon.ChevronRight))
+            if (ImGuiComponents.IconButton($"##{encounterId}_prev", FontAwesomeIcon.ChevronLeft))
             {
-                // Next turn
+                Plugin.Encounters.ReverseTurn(encounterId);
             }
         }
 
@@ -62,8 +62,20 @@ internal class EncounterDetailTab
             {
                 // Roll for initiative
             }
+        }
 
-            ImGui.SameLine();
+        ImGui.SameLine();
+        using (ImRaii.Disabled(!isDm && !isMyTurn))
+        {
+            if (ImGuiComponents.IconButton($"##{encounterId}_next", FontAwesomeIcon.ChevronRight))
+            {
+                Plugin.Encounters.AdvanceTurn(encounterId);
+            }
+        }
+
+        ImGui.SameLine();
+        using (ImRaii.Disabled(!isDm))
+        {
             if (ImGuiComponents.IconButton($"##{encounterId}_menu", FontAwesomeIcon.EllipsisV))
             {
                 ImGui.OpenPopup($"EncounterMenu##{encounterId}");
