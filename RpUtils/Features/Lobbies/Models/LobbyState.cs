@@ -19,5 +19,6 @@ public class LobbyMember
 
     public bool IsOwner => Role == nameof(LobbyRole.Owner);
     public bool IsModerator => Role == nameof(LobbyRole.Moderator);
+    public bool IsGhost => Role == nameof(LobbyRole.Ghost);
     public bool IsModeratorOrAbove => IsModerator || IsOwner;
 }

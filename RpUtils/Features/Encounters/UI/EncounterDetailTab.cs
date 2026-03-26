@@ -140,9 +140,10 @@ internal class EncounterDetailTab
     private void DrawParticipantsTable(string encounterId, EncounterState encounter, Lobby lobby)
     {
         var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH;
-        using var table = ImRaii.Table($"Participants##{encounterId}", 2, flags);
+        using var table = ImRaii.Table($"Participants##{encounterId}", 3, flags);
         if (!table.Success) return;
 
+        ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 20);
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Initiative", ImGuiTableColumnFlags.WidthFixed, 60);
         ImGui.TableHeadersRow();
@@ -160,6 +161,37 @@ internal class EncounterDetailTab
     {
         ImGui.TableNextRow();
 
+        // Icon column
+        ImGui.TableNextColumn();
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            if (participant.IsCurrent)
+            {
+                ImGui.TextColored(Theme.GoldColor, FontAwesomeIcon.Star.ToIconString());
+            }
+            else if (participant.IsNpc)
+            {
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Robot.ToIconString());
+            }
+            else if (participant.Role == nameof(Lobbies.Models.LobbyRole.Owner))
+            {
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Crown.ToIconString());
+            }
+            else if (participant.Role == nameof(Lobbies.Models.LobbyRole.Moderator))
+            {
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Shield.ToIconString());
+            }
+            else if (participant.Role == nameof(Lobbies.Models.LobbyRole.Ghost))
+            {
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Ghost.ToIconString());
+            }
+            else
+            {
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.User.ToIconString());
+            }
+        }
+
+        // Name column
         ImGui.TableNextColumn();
 
         // Invisible selectable spanning the full cell for right-click target
@@ -167,14 +199,6 @@ internal class EncounterDetailTab
         var rowContextTarget = ImGui.IsItemClicked(ImGuiMouseButton.Right);
         ImGui.SameLine(0, 0);
 
-        if (participant.IsCurrent)
-        {
-            using (ImRaii.PushFont(UiBuilder.IconFont))
-            {
-                ImGui.TextColored(Theme.YellowColor, FontAwesomeIcon.Star.ToIconString());
-            }
-            ImGui.SameLine();
-        }
         ImGui.Text(participant.DisplayName);
 
         // NPC context menu on the name column

@@ -26,5 +26,7 @@ public interface ILobbiesController
     Task DemoteMember(string lobbyId, string playerId);
     Task UpdateMemberDisplayName(string lobbyId, string playerId, string newDisplayName);
     Task UpdateMemberCharacterName(string lobbyId, string playerId, string newCharacterName);
+    Task CreateGhostPlayer(string lobbyId, string displayName, string characterName);
+    Task RemoveGhostPlayer(string lobbyId, string playerId);
     Task RefreshLobbies();
 }

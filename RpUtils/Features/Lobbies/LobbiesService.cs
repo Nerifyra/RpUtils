@@ -230,4 +230,32 @@ public sealed class LobbiesService
             Plugin.Log.Error(ex, "Failed to update character name.");
         }
     }
+
+    public async Task CreateGhostPlayer(string lobbyId, string displayName, string characterName)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return;
+            await _hub.Connection!.InvokeAsync("CreateGhostPlayer", lobbyId, displayName, characterName);
+            Plugin.Log.Info("Created ghost player in lobby {LobbyId}", lobbyId);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to create ghost player.");
+        }
+    }
+
+    public async Task RemoveGhostPlayer(string lobbyId, string targetPlayerId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return;
+            await _hub.Connection!.InvokeAsync("RemoveGhostPlayer", lobbyId, targetPlayerId);
+            Plugin.Log.Info("Removed ghost player {PlayerId} from lobby {LobbyId}", targetPlayerId, lobbyId);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to remove ghost player.");
+        }
+    }
 }

@@ -9,6 +9,7 @@ public static class Theme
     // ── Colors ──────────────────────────────────────────────────────────
     public static readonly Vector4 GreenColor = new(0.0f, 1.0f, 0.0f, 1.0f);
     public static readonly Vector4 YellowColor = new(1.0f, 1.0f, 0.0f, 1.0f);
+    public static readonly Vector4 GoldColor = new(0.85f, 0.65f, 0.13f, 1.0f);
     public static readonly Vector4 RedColor = new(1.0f, 0.0f, 0.0f, 1.0f);
     public static readonly Vector4 GrayColor = new(0.5f, 0.5f, 0.5f, 1.0f);
     public static readonly Vector4 WhiteColor = new(1.0f, 1.0f, 1.0f, 1.0f);

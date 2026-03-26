@@ -141,6 +141,16 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         await _service.UpdateMemberCharacterName(lobbyId, playerId, newCharacterName);
     }
 
+    public async Task CreateGhostPlayer(string lobbyId, string displayName, string characterName)
+    {
+        await _service.CreateGhostPlayer(lobbyId, displayName, characterName);
+    }
+
+    public async Task RemoveGhostPlayer(string lobbyId, string playerId)
+    {
+        await _service.RemoveGhostPlayer(lobbyId, playerId);
+    }
+
     public async Task RefreshLobbies()
     {
         if (_isLoading) return;
