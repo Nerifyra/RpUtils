@@ -2,7 +2,6 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using RpUtils.Features.Sonar.Models;
-using RpUtils.Models;
 using RpUtils.UI;
 using System.Threading.Tasks;
 
@@ -42,8 +41,7 @@ internal class ShareLocationWindow : Window
     {
         var sonar = Plugin.Sonar;
         var isSharing = sonar.IsSharingLocation;
-        var isConnected = Plugin.ConnectionStatus.Status == ConnectionState.Connected;
-        using var disabled = ImRaii.Disabled(!isConnected);
+        using var disabled = ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected);
         if (ImGui.Checkbox("Share Roleplay Location", ref isSharing))
         {
             Task.Run(async () =>

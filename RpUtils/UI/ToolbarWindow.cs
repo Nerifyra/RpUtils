@@ -4,7 +4,6 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using RpUtils.Models;
 using RpUtils.UI;
 using RpUtils.UI.Components;
 using System;
@@ -78,8 +77,7 @@ internal class ToolbarWindow : Window
 
     public override void Draw()
     {
-        var isConnected = Plugin.ConnectionStatus.Status == ConnectionState.Connected;
-        using (ImRaii.Disabled(!isConnected))
+        using (ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected))
         {
             ImGui.Text("Rp Utils:");
             ImGui.SameLine();

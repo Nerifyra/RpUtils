@@ -2,6 +2,7 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using RpUtils.Features.Lobbies;
 using RpUtils.Features.Sonar;
 using RpUtils.Services;
 using RpUtils.UI;
@@ -26,6 +27,7 @@ public sealed class Plugin : IDalamudPlugin
     internal static Configuration Configuration { get; private set; } = null!;
     internal static IConnectionStatus ConnectionStatus { get; private set; } = null!;
     internal static ISonarController Sonar { get; private set; } = null!;
+    internal static ILobbiesController Lobbies { get; private set; } = null!;
     internal static UIManager UI { get; private set; } = null!;
 
     private const string CommandName = "/rputils";
@@ -33,6 +35,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly HubConnectionService _hub;
     private readonly SonarService _sonarService;
     private readonly SonarController _sonarController;
+    private readonly LobbiesService _lobbiesService;
+    private readonly LobbiesController _lobbiesController;
 
     public Plugin()
     {
@@ -42,9 +46,12 @@ public sealed class Plugin : IDalamudPlugin
         _hub = new HubConnectionService();
         _sonarService = new SonarService(_hub);
         _sonarController = new SonarController(_sonarService);
+        _lobbiesService = new LobbiesService(_hub);
+        _lobbiesController = new LobbiesController(_lobbiesService);
 
         ConnectionStatus = _hub;
         Sonar = _sonarController;
+        Lobbies = _lobbiesController;
 
         // UI
         UI = new UIManager();
@@ -71,6 +78,7 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(CommandName);
 
         UI.Dispose();
+        _lobbiesController.Dispose();
         _sonarController.Dispose();
         _hub.DisposeAsync().AsTask().Wait();
     }
