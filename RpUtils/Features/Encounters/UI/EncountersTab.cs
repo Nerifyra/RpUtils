@@ -1,4 +1,6 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Lobbies.Models;
 using System.Linq;
@@ -44,15 +46,36 @@ internal class EncountersTab
 
         var buttonText = "Roll for initiative...";
         var buttonWidth = ImGui.CalcTextSize(buttonText).X + ImGui.GetStyle().FramePadding.X * 2;
+        var spacing = ImGui.GetStyle().ItemSpacing.X;
+
+        float iconWidth;
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            iconWidth = ImGui.CalcTextSize(FontAwesomeIcon.Khanda.ToIconString()).X;
+        }
+
+        var totalWidth = iconWidth + spacing + buttonWidth + spacing + iconWidth;
         var availWidth = ImGui.GetContentRegionAvail().X;
         var availHeight = ImGui.GetContentRegionAvail().Y;
 
-        ImGui.SetCursorPosX((availWidth - buttonWidth) * 0.5f);
+        ImGui.SetCursorPosX((availWidth - totalWidth) * 0.5f);
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + availHeight * 0.4f);
 
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(FontAwesomeIcon.Khanda.ToIconString());
+        }
+        ImGui.SameLine();
         if (ImGui.Button(buttonText))
         {
             _encounterPopup.Open(lobby);
+        }
+        ImGui.SameLine();
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(FontAwesomeIcon.Shield.ToIconString());
         }
     }
 
