@@ -56,7 +56,7 @@ internal class ManageTab
         if (!table.Success) return;
 
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Role", ImGuiTableColumnFlags.WidthFixed, 50);
+        ImGui.TableSetupColumn("##Role", ImGuiTableColumnFlags.WidthFixed, 30);
         ImGui.TableSetupColumn("##Actions", ImGuiTableColumnFlags.WidthFixed, 30);
         ImGui.TableHeadersRow();
 
@@ -82,14 +82,26 @@ internal class ManageTab
         }
 
         ImGui.TableNextColumn();
-        if (member.IsOwner)
+        if (member.IsOwner || member.IsModerator)
         {
-            ImGui.TextDisabled("Owner");
+            var icon = member.IsOwner ? FontAwesomeIcon.Crown : FontAwesomeIcon.Shield;
+            var tooltip = member.IsOwner ? "Owner" : "Moderator";
+
+            ImGui.PushFont(UiBuilder.IconFont);
+            var iconWidth = ImGui.CalcTextSize(icon.ToIconString()).X;
+            var columnWidth = ImGui.GetColumnWidth();
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (columnWidth - iconWidth) * 0.5f);
+            ImGui.TextDisabled(icon.ToIconString());
+            ImGui.PopFont();
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip(tooltip);
         }
 
         ImGui.TableNextColumn();
         var isSelf = member.PlayerId == lobby.PlayerId;
-        var canManageOther = lobby.IsOwner && !member.IsOwner;
+        var canManageOther = !isSelf && (
+            lobby.IsOwner && !member.IsOwner ||
+            lobby.IsModeratorOrAbove && !member.IsModeratorOrAbove
+        );
 
         if (canManageOther || isSelf)
         {
@@ -114,7 +126,7 @@ internal class ManageTab
             _openDisplayNamePopup = true;
         }
 
-        if (lobby.IsOwner && ImGui.MenuItem("Change Character Name"))
+        if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Change Character Name"))
         {
             _charNameBuffer = member.CharacterName;
             _charNameTargetPlayerId = member.PlayerId;
@@ -123,12 +135,25 @@ internal class ManageTab
 
         if (canManageOther)
         {
-            if (ImGui.MenuItem("Transfer Ownership"))
+            if (lobby.IsOwner)
             {
-                Plugin.Lobbies.TransferOwnership(_lobbyId, member.PlayerId);
+                if (ImGui.MenuItem("Transfer Ownership"))
+                {
+                    Plugin.Lobbies.TransferOwnership(_lobbyId, member.PlayerId);
+                }
+
+                if (member.IsModerator && ImGui.MenuItem("Demote to Member"))
+                {
+                    Plugin.Lobbies.DemoteMember(_lobbyId, member.PlayerId);
+                }
+
+                if (!member.IsModerator && ImGui.MenuItem("Promote to Moderator"))
+                {
+                    Plugin.Lobbies.PromoteMember(_lobbyId, member.PlayerId);
+                }
             }
 
-            if (ImGui.MenuItem("Kick Member"))
+            if (ImGui.MenuItem("Kick"))
             {
                 Plugin.Lobbies.KickMember(_lobbyId, member.PlayerId);
             }

@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using RpUtils.Features.Encounters.UI;
 using RpUtils.Features.Lobbies.Models;
 using RpUtils.UI;
 
@@ -102,12 +103,12 @@ internal class LobbyDetailWindow : Window
                 ImGui.SetClipboardText(lobby.State.JoinCode);
             }
 
-            if (lobby.IsOwner && ImGui.MenuItem("Refresh Join Code"))
+            if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Refresh Join Code"))
             {
                 Plugin.Lobbies.RegenerateJoinCode(_lobbyId);
             }
 
-            if (lobby.IsOwner && ImGui.MenuItem("Rename Lobby"))
+            if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Rename Lobby"))
             {
                 _renameBuffer = lobby.State.Name;
                 _openRenamePopup = true;

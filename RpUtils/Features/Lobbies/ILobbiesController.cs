@@ -22,6 +22,8 @@ public interface ILobbiesController
     Task RenameLobby(string lobbyId, string newName);
     Task KickMember(string lobbyId, string playerId);
     Task TransferOwnership(string lobbyId, string playerId);
+    Task PromoteMember(string lobbyId, string playerId);
+    Task DemoteMember(string lobbyId, string playerId);
     Task UpdateMemberDisplayName(string lobbyId, string playerId, string newDisplayName);
     Task UpdateMemberCharacterName(string lobbyId, string playerId, string newCharacterName);
     Task RefreshLobbies();

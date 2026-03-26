@@ -147,6 +147,34 @@ public sealed class LobbiesService
         }
     }
 
+    public async Task PromoteMember(string lobbyId, string targetPlayerId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return;
+            await _hub.Connection!.InvokeAsync("PromoteMember", lobbyId, targetPlayerId);
+            Plugin.Log.Info("Promoted player {PlayerId} in lobby {LobbyId}", targetPlayerId, lobbyId);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to promote member.");
+        }
+    }
+
+    public async Task DemoteMember(string lobbyId, string targetPlayerId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return;
+            await _hub.Connection!.InvokeAsync("DemoteMember", lobbyId, targetPlayerId);
+            Plugin.Log.Info("Demoted player {PlayerId} in lobby {LobbyId}", targetPlayerId, lobbyId);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to demote member.");
+        }
+    }
+
     public async Task RegenerateJoinCode(string lobbyId)
     {
         try

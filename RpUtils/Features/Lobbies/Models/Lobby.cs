@@ -8,5 +8,7 @@ public class Lobby
     public string PlayerId { get; set; } = string.Empty;
     public LobbyState State { get; set; } = new();
 
-    public bool IsOwner => State.Members.Any(m => m.PlayerId == PlayerId && m.IsOwner);
+    public LobbyMember? MyMember => State.Members.FirstOrDefault(m => m.PlayerId == PlayerId);
+    public bool IsOwner => MyMember?.IsOwner ?? false;
+    public bool IsModeratorOrAbove => MyMember?.IsModeratorOrAbove ?? false;
 }

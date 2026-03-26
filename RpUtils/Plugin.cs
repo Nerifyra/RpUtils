@@ -2,6 +2,7 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using RpUtils.Features.Encounters;
 using RpUtils.Features.Lobbies;
 using RpUtils.Features.Sonar;
 using RpUtils.Services;

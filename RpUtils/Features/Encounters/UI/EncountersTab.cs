@@ -1,7 +1,7 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
-namespace RpUtils.Features.Lobbies.UI;
+namespace RpUtils.Features.Encounters.UI;
 
 internal class EncountersTab
 {

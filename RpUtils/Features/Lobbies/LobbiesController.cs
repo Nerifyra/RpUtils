@@ -121,6 +121,16 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         await _service.TransferOwnership(lobbyId, playerId);
     }
 
+    public async Task PromoteMember(string lobbyId, string playerId)
+    {
+        await _service.PromoteMember(lobbyId, playerId);
+    }
+
+    public async Task DemoteMember(string lobbyId, string playerId)
+    {
+        await _service.DemoteMember(lobbyId, playerId);
+    }
+
     public async Task UpdateMemberDisplayName(string lobbyId, string playerId, string newDisplayName)
     {
         await _service.UpdateMemberDisplayName(lobbyId, playerId, newDisplayName);

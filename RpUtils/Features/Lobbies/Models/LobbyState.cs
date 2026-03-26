@@ -15,5 +15,9 @@ public class LobbyMember
     public string PlayerId { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public string CharacterName { get; set; } = string.Empty;
-    public bool IsOwner { get; set; }
+    public string Role { get; set; } = string.Empty;
+
+    public bool IsOwner => Role == nameof(LobbyRole.Owner);
+    public bool IsModerator => Role == nameof(LobbyRole.Moderator);
+    public bool IsModeratorOrAbove => IsModerator || IsOwner;
 }
