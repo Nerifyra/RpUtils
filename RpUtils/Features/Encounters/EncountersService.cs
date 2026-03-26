@@ -71,6 +71,21 @@ public sealed class EncountersService
         }
     }
 
+    public async Task<bool> SetInitiative(string encounterId, string participantId, int value)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("SetInitiative", encounterId, participantId, value);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to set initiative.");
+            return false;
+        }
+    }
+
     public async Task<bool> EndEncounter(string encounterId)
     {
         try

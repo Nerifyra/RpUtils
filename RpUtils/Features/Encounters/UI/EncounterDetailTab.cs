@@ -14,6 +14,7 @@ namespace RpUtils.Features.Encounters.UI;
 internal class EncounterDetailTab
 {
     private readonly Dictionary<string, int> _initiativeBuffers = [];
+    private readonly HashSet<string> _activeInputs = [];
 
     public void Draw(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
     {
@@ -24,7 +25,7 @@ internal class EncounterDetailTab
 
         ImGui.Separator();
 
-        DrawParticipantsTable(encounterId, encounter);
+        DrawParticipantsTable(encounterId, encounter, lobby);
     }
 
     private void DrawControls(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
@@ -101,7 +102,7 @@ internal class EncounterDetailTab
         }
     }
 
-    private void DrawParticipantsTable(string encounterId, EncounterState encounter)
+    private void DrawParticipantsTable(string encounterId, EncounterState encounter, Lobby lobby)
     {
         var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH;
         using var table = ImRaii.Table($"Participants##{encounterId}", 2, flags);
@@ -113,11 +114,11 @@ internal class EncounterDetailTab
 
         foreach (var participant in encounter.Participants)
         {
-            DrawParticipantRow(encounterId, participant);
+            DrawParticipantRow(encounterId, participant, lobby.IsModeratorOrAbove);
         }
     }
 
-    private void DrawParticipantRow(string encounterId, EncounterParticipant participant)
+    private void DrawParticipantRow(string encounterId, EncounterParticipant participant, bool isDm)
     {
         ImGui.TableNextRow();
 
@@ -133,15 +134,38 @@ internal class EncounterDetailTab
         ImGui.Text(participant.DisplayName);
 
         ImGui.TableNextColumn();
-        if (!_initiativeBuffers.ContainsKey(participant.ParticipantId))
-            _initiativeBuffers[participant.ParticipantId] = participant.Initiative ?? 0;
+        var serverValue = participant.Initiative ?? 0;
+
+        // Initialize buffer, or sync from server when not actively editing
+        if (!_activeInputs.Contains(participant.ParticipantId))
+            _initiativeBuffers[participant.ParticipantId] = serverValue;
 
         var value = _initiativeBuffers[participant.ParticipantId];
         ImGui.SetNextItemWidth(-1);
-        if (ImGui.InputInt($"##Init{encounterId}_{participant.ParticipantId}", ref value, 0, 0))
+        using (ImRaii.Disabled(!isDm))
         {
-            _initiativeBuffers[participant.ParticipantId] = value;
-            // TODO: Send initiative update to server
+            if (ImGui.InputInt($"##Init{encounterId}_{participant.ParticipantId}", ref value, 0, 0))
+            {
+                _initiativeBuffers[participant.ParticipantId] = value;
+            }
+
+            // Track whether this input is actively being edited
+            if (ImGui.IsItemActive())
+                _activeInputs.Add(participant.ParticipantId);
+
+            // Send to server when the input loses focus, if the value changed
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                _activeInputs.Remove(participant.ParticipantId);
+                if (_initiativeBuffers[participant.ParticipantId] != serverValue)
+                {
+                    Plugin.Encounters.SetInitiative(encounterId, participant.ParticipantId, _initiativeBuffers[participant.ParticipantId]);
+                }
+            }
+            else if (!ImGui.IsItemActive())
+            {
+                _activeInputs.Remove(participant.ParticipantId);
+            }
         }
     }
 }

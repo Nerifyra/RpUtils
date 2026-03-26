@@ -73,6 +73,15 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
+    public async Task SetInitiative(string encounterId, string participantId, int value)
+    {
+        var success = await _service.SetInitiative(encounterId, participantId, value);
+        if (!success)
+        {
+            ShowError("Failed to set initiative.");
+        }
+    }
+
     public async Task EndEncounter(string encounterId)
     {
         var success = await _service.EndEncounter(encounterId);

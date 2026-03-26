@@ -15,6 +15,7 @@ public interface IEncountersController
     Task UpdateEncounter(string lobbyId, string encounterId, string name, List<string> playerIds);
     Task AdvanceTurn(string encounterId);
     Task ReverseTurn(string encounterId);
+    Task SetInitiative(string encounterId, string participantId, int value);
     Task EndEncounter(string encounterId);
     Task RefreshEncounters(string lobbyId);
 }
