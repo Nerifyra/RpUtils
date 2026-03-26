@@ -62,25 +62,36 @@ internal class ManageTab
 
     private void DrawMembersTable(Lobby lobby)
     {
-        if (lobby.IsModeratorOrAbove)
-        {
-            if (ImGuiComponents.IconButton($"##AddGhost{_lobbyId}", FontAwesomeIcon.UserPlus))
-            {
-                _ghostDisplayNameBuffer = string.Empty;
-                _ghostCharNameBuffer = string.Empty;
-                _openGhostPopup = true;
-            }
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Add Ghost Player");
-        }
-
         var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH;
         using var table = ImRaii.Table($"Members##{_lobbyId}", 3, flags);
         if (!table.Success) return;
 
-        ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 20);
+        ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 26);
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("##Actions", ImGuiTableColumnFlags.WidthFixed, 30);
-        ImGui.TableHeadersRow();
+
+        // Custom header row
+        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+
+        ImGui.TableNextColumn();
+        if (lobby.IsModeratorOrAbove)
+        {
+            using (ImRaii.PushFont(UiBuilder.IconFont))
+            {
+                if (ImGui.SmallButton(FontAwesomeIcon.UserPlus.ToIconString() + $"##AddGhost{_lobbyId}"))
+                {
+                    _ghostDisplayNameBuffer = string.Empty;
+                    _ghostCharNameBuffer = string.Empty;
+                    _openGhostPopup = true;
+                }
+            }
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Add Ghost Player");
+        }
+
+        ImGui.TableNextColumn();
+        ImGui.TableHeader("Name");
+
+        ImGui.TableNextColumn();
 
         foreach (var member in lobby.State.Members)
         {
@@ -126,7 +137,11 @@ internal class ManageTab
 
             using (ImRaii.PushFont(UiBuilder.IconFont))
             {
-                ImGui.TextColored(color, icon.ToIconString());
+                var iconText = icon.ToIconString();
+                var iconWidth = ImGui.CalcTextSize(iconText).X;
+                var columnWidth = ImGui.GetColumnWidth();
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (columnWidth - iconWidth) * 0.5f);
+                ImGui.TextColored(color, iconText);
             }
             if (ImGui.IsItemHovered()) ImGui.SetTooltip(tooltip);
         }
@@ -274,6 +289,11 @@ internal class ManageTab
         using var popup = ImRaii.Popup($"GhostPopup##{_lobbyId}");
         if (!popup.Success) return;
 
+        ImGui.PushTextWrapPos(0);
+        ImGui.TextColored(Theme.GrayColor, "Ghost Players are used to represent non plugin users. Character Name should match the in-game name to properly track rolls.");
+        ImGui.PopTextWrapPos();
+        ImGui.Spacing();
+
         ImGui.Text("Display Name");
         ImGui.SetNextItemWidth(-1);
         ImGui.InputText($"##GhostDisplayName{_lobbyId}", ref _ghostDisplayNameBuffer, 64);
@@ -284,8 +304,6 @@ internal class ManageTab
         ImGui.SetNextItemWidth(-1);
         ImGui.InputText($"##GhostCharName{_lobbyId}", ref _ghostCharNameBuffer, 64);
 
-        ImGui.Spacing();
-        ImGui.TextColored(Theme.GrayColor, "Character Name should match the\nin-game name to properly track rolls.");
         ImGui.Spacing();
 
         var displayName = _ghostDisplayNameBuffer.Trim();
