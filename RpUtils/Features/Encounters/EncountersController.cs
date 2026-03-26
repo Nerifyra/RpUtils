@@ -22,11 +22,18 @@ public sealed class EncountersController : IEncountersController, IDisposable
         _service = service;
 
         _service.OnEncounterStateUpdated += OnEncounterStateUpdated;
+        _service.OnEncounterEnded += OnEncounterEnded;
     }
 
     private void OnEncounterStateUpdated(EncounterState state)
     {
         _encounters[state.EncounterId] = state;
+        OnStateChanged?.Invoke();
+    }
+
+    private void OnEncounterEnded(string encounterId)
+    {
+        _encounters.Remove(encounterId);
         OnStateChanged?.Invoke();
     }
 
@@ -45,6 +52,15 @@ public sealed class EncountersController : IEncountersController, IDisposable
         if (!success)
         {
             ShowError("Failed to update encounter.");
+        }
+    }
+
+    public async Task EndEncounter(string encounterId)
+    {
+        var success = await _service.EndEncounter(encounterId);
+        if (!success)
+        {
+            ShowError("Failed to end encounter.");
         }
     }
 
@@ -82,5 +98,6 @@ public sealed class EncountersController : IEncountersController, IDisposable
     public void Dispose()
     {
         _service.OnEncounterStateUpdated -= OnEncounterStateUpdated;
+        _service.OnEncounterEnded -= OnEncounterEnded;
     }
 }

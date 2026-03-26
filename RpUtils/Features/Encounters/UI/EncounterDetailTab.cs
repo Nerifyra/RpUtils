@@ -82,6 +82,11 @@ internal class EncounterDetailTab
         {
             editPopup.OpenForEdit(lobby, encounter);
         }
+
+        if (ImGui.MenuItem("End Encounter"))
+        {
+            Plugin.Encounters.EndEncounter(encounterId);
+        }
     }
 
     private void DrawParticipantsTable(string encounterId, EncounterState encounter)

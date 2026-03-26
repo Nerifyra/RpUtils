@@ -12,6 +12,7 @@ public sealed class EncountersService
     private readonly HubConnectionService _hub;
 
     public event Action<EncounterState>? OnEncounterStateUpdated;
+    public event Action<string>? OnEncounterEnded;
 
     public EncountersService(HubConnectionService hub)
     {
@@ -20,6 +21,7 @@ public sealed class EncountersService
         _hub.OnConnected += connection =>
         {
             connection.On<EncounterState>("EncounterStateUpdated", state => OnEncounterStateUpdated?.Invoke(state));
+            connection.On<string>("EncounterEnded", encounterId => OnEncounterEnded?.Invoke(encounterId));
         };
     }
 
@@ -35,6 +37,22 @@ public sealed class EncountersService
         catch (Exception ex)
         {
             Plugin.Log.Error(ex, "Failed to update encounter.");
+            return false;
+        }
+    }
+
+    public async Task<bool> EndEncounter(string encounterId)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("EndEncounter", encounterId);
+            Plugin.Log.Info("Ended encounter {EncounterId}", encounterId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to end encounter.");
             return false;
         }
     }
