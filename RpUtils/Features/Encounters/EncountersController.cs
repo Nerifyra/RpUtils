@@ -82,6 +82,15 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
+    public async Task AddNpcParticipant(string encounterId, string displayName)
+    {
+        var success = await _service.AddNpcParticipant(encounterId, displayName);
+        if (!success)
+        {
+            ShowError("Failed to add NPC.");
+        }
+    }
+
     public async Task EndEncounter(string encounterId)
     {
         var success = await _service.EndEncounter(encounterId);

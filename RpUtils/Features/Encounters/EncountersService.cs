@@ -86,6 +86,22 @@ public sealed class EncountersService
         }
     }
 
+    public async Task<bool> AddNpcParticipant(string encounterId, string displayName)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("AddNpcParticipant", encounterId, displayName);
+            Plugin.Log.Info("Added NPC to encounter {EncounterId}", encounterId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to add NPC participant.");
+            return false;
+        }
+    }
+
     public async Task<bool> EndEncounter(string encounterId)
     {
         try

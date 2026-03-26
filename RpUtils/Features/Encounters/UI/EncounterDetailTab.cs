@@ -15,6 +15,8 @@ internal class EncounterDetailTab
 {
     private readonly Dictionary<string, int> _initiativeBuffers = [];
     private readonly HashSet<string> _activeInputs = [];
+    private string _npcNameBuffer = string.Empty;
+    private bool _openNpcPopup;
 
     public void Draw(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
     {
@@ -43,7 +45,8 @@ internal class EncounterDetailTab
         {
             if (ImGuiComponents.IconButton($"##{encounterId}_add", FontAwesomeIcon.Plus))
             {
-                // Adding NPC
+                _npcNameBuffer = string.Empty;
+                _openNpcPopup = true;
             }
         }
 
@@ -83,6 +86,35 @@ internal class EncounterDetailTab
             }
 
             DrawContextMenu(encounterId, encounter, lobby, editPopup);
+        }
+
+        DrawNpcPopup(encounterId);
+    }
+
+    private void DrawNpcPopup(string encounterId)
+    {
+        if (_openNpcPopup)
+        {
+            ImGui.OpenPopup($"AddNpc##{encounterId}");
+            _openNpcPopup = false;
+        }
+
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(250, 0), ImGuiCond.Always);
+        using var popup = ImRaii.Popup($"AddNpc##{encounterId}");
+        if (!popup.Success) return;
+
+        ImGui.Text("NPC Name");
+        ImGui.SetNextItemWidth(-1);
+        var submit = ImGui.InputText($"##NpcName{encounterId}", ref _npcNameBuffer, 64, ImGuiInputTextFlags.EnterReturnsTrue);
+
+        if (submit || ImGui.Button("Add", new System.Numerics.Vector2(-1, 0)))
+        {
+            if (!string.IsNullOrWhiteSpace(_npcNameBuffer))
+            {
+                Plugin.Encounters.AddNpcParticipant(encounterId, _npcNameBuffer.Trim());
+                _npcNameBuffer = string.Empty;
+                ImGui.CloseCurrentPopup();
+            }
         }
     }
 
