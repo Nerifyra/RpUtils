@@ -25,7 +25,7 @@ internal class LobbyDetailWindow : Window
         Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new System.Numerics.Vector2(300, 200),
+            MinimumSize = new System.Numerics.Vector2(300, 300),
         };
         IsOpen = true;
     }

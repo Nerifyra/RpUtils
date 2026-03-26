@@ -1,22 +1,117 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Encounters.Models;
+using RpUtils.Features.Lobbies.Models;
+using System.Collections.Generic;
+using System.Linq;
+
+using Theme = RpUtils.UI.Theme;
 
 namespace RpUtils.Features.Encounters.UI;
 
 internal class EncounterDetailTab
 {
-    public void Draw(string encounterId, EncounterState encounter)
+    private readonly Dictionary<string, int> _initiativeBuffers = [];
+
+    public void Draw(string encounterId, EncounterState encounter, Lobby lobby)
     {
         using var tab = ImRaii.TabItem($"{encounter.Name}##{encounterId}");
         if (!tab.Success) return;
 
-        ImGui.Text($"Round {encounter.RoundNumber}");
+        DrawControls(encounterId, encounter, lobby);
+
+        ImGui.Separator();
+
+        DrawParticipantsTable(encounterId, encounter);
+    }
+
+    private void DrawControls(string encounterId, EncounterState encounter, Lobby lobby)
+    {
+        var isDm = lobby.IsModeratorOrAbove;
+        var currentParticipant = encounter.Participants.FirstOrDefault(p => p.IsCurrent);
+        var isMyTurn = currentParticipant != null && currentParticipant.PlayerId == lobby.PlayerId;
+
+        var buttonSize = ImGui.GetFrameHeight();
+        var spacing = ImGui.GetStyle().ItemSpacing.X;
+        var totalWidth = buttonSize * 4 + spacing * 3;
+        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - totalWidth) * 0.5f);
+
+        using (ImRaii.Disabled(!isDm))
+        {
+            if (ImGuiComponents.IconButton($"##{encounterId}_prev", FontAwesomeIcon.ChevronLeft))
+            {
+                // Previous turn
+            }
+        }
+
+        ImGui.SameLine();
+        using (ImRaii.Disabled(!isDm && !isMyTurn))
+        {
+            if (ImGuiComponents.IconButton($"##{encounterId}_next", FontAwesomeIcon.ChevronRight))
+            {
+                // Next turn
+            }
+        }
+
+        ImGui.SameLine();
+        using (ImRaii.Disabled(!isDm))
+        {
+            if (ImGuiComponents.IconButton($"##{encounterId}_dice", FontAwesomeIcon.DiceD20))
+            {
+                // Roll for initiative
+            }
+
+            ImGui.SameLine();
+            if (ImGuiComponents.IconButton($"##{encounterId}_menu", FontAwesomeIcon.EllipsisV))
+            {
+                // Context menu
+            }
+        }
+    }
+
+    private void DrawParticipantsTable(string encounterId, EncounterState encounter)
+    {
+        var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH;
+        using var table = ImRaii.Table($"Participants##{encounterId}", 2, flags);
+        if (!table.Success) return;
+
+        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("Initiative", ImGuiTableColumnFlags.WidthFixed, 60);
+        ImGui.TableHeadersRow();
+
         foreach (var participant in encounter.Participants)
         {
-            var prefix = participant.IsCurrent ? "> " : "  ";
-            var initiative = participant.Initiative.HasValue ? $"[{participant.Initiative}] " : "";
-            ImGui.Text($"{prefix}{initiative}{participant.DisplayName}");
+            DrawParticipantRow(encounterId, participant);
+        }
+    }
+
+    private void DrawParticipantRow(string encounterId, EncounterParticipant participant)
+    {
+        ImGui.TableNextRow();
+
+        ImGui.TableNextColumn();
+        if (participant.IsCurrent)
+        {
+            using (ImRaii.PushFont(UiBuilder.IconFont))
+            {
+                ImGui.TextColored(Theme.YellowColor, FontAwesomeIcon.Star.ToIconString());
+            }
+            ImGui.SameLine();
+        }
+        ImGui.Text(participant.DisplayName);
+
+        ImGui.TableNextColumn();
+        if (!_initiativeBuffers.ContainsKey(participant.ParticipantId))
+            _initiativeBuffers[participant.ParticipantId] = participant.Initiative ?? 0;
+
+        var value = _initiativeBuffers[participant.ParticipantId];
+        ImGui.SetNextItemWidth(-1);
+        if (ImGui.InputInt($"##Init{encounterId}_{participant.ParticipantId}", ref value, 0, 0))
+        {
+            _initiativeBuffers[participant.ParticipantId] = value;
+            // TODO: Send initiative update to server
         }
     }
 }
