@@ -29,6 +29,7 @@ public sealed class Plugin : IDalamudPlugin
     internal static IConnectionStatus ConnectionStatus { get; private set; } = null!;
     internal static ISonarController Sonar { get; private set; } = null!;
     internal static ILobbiesController Lobbies { get; private set; } = null!;
+    internal static IEncountersController Encounters { get; private set; } = null!;
     internal static UIManager UI { get; private set; } = null!;
 
     private const string CommandName = "/rputils";
@@ -38,6 +39,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly SonarController _sonarController;
     private readonly LobbiesService _lobbiesService;
     private readonly LobbiesController _lobbiesController;
+    private readonly EncountersService _encountersService;
+    private readonly EncountersController _encountersController;
 
     public Plugin()
     {
@@ -49,10 +52,13 @@ public sealed class Plugin : IDalamudPlugin
         _sonarController = new SonarController(_sonarService);
         _lobbiesService = new LobbiesService(_hub);
         _lobbiesController = new LobbiesController(_lobbiesService);
+        _encountersService = new EncountersService(_hub);
+        _encountersController = new EncountersController(_encountersService);
 
         ConnectionStatus = _hub;
         Sonar = _sonarController;
         Lobbies = _lobbiesController;
+        Encounters = _encountersController;
 
         // UI
         UI = new UIManager();
@@ -79,6 +85,7 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(CommandName);
 
         UI.Dispose();
+        _encountersController.Dispose();
         _lobbiesController.Dispose();
         _sonarController.Dispose();
         _hub.DisposeAsync().AsTask().Wait();
