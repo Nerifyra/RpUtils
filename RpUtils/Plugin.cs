@@ -4,6 +4,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using RpUtils.Features.Encounters;
 using RpUtils.Features.Lobbies;
+using RpUtils.Features.Rolls;
 using RpUtils.Features.Sonar;
 using RpUtils.Services;
 using RpUtils.UI;
@@ -24,12 +25,14 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
     [PluginService] internal static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
+    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
 
     internal static Configuration Configuration { get; private set; } = null!;
     internal static IConnectionStatus ConnectionStatus { get; private set; } = null!;
     internal static ISonarController Sonar { get; private set; } = null!;
     internal static ILobbiesController Lobbies { get; private set; } = null!;
     internal static IEncountersController Encounters { get; private set; } = null!;
+    internal static IRollsController Rolls { get; private set; } = null!;
     internal static UIManager UI { get; private set; } = null!;
 
     private const string CommandName = "/rputils";
@@ -41,6 +44,9 @@ public sealed class Plugin : IDalamudPlugin
     private readonly LobbiesController _lobbiesController;
     private readonly EncountersService _encountersService;
     private readonly EncountersController _encountersController;
+    private readonly RollsService _rollsService;
+    private readonly RollsController _rollsController;
+    private readonly ChatRollListener _chatRollListener;
 
     public Plugin()
     {
@@ -54,11 +60,15 @@ public sealed class Plugin : IDalamudPlugin
         _lobbiesController = new LobbiesController(_lobbiesService);
         _encountersService = new EncountersService(_hub);
         _encountersController = new EncountersController(_encountersService);
+        _rollsService = new RollsService(_hub);
+        _rollsController = new RollsController(_rollsService);
+        _chatRollListener = new ChatRollListener();
 
         ConnectionStatus = _hub;
         Sonar = _sonarController;
         Lobbies = _lobbiesController;
         Encounters = _encountersController;
+        Rolls = _rollsController;
 
         // UI
         UI = new UIManager();
@@ -85,6 +95,8 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(CommandName);
 
         UI.Dispose();
+        _chatRollListener.Dispose();
+        _rollsController.Dispose();
         _encountersController.Dispose();
         _lobbiesController.Dispose();
         _sonarController.Dispose();

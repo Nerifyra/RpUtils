@@ -6,13 +6,20 @@ namespace RpUtils.UI;
 
 public static class Theme
 {
-    // ── Colors ──────────────────────────────────────────────────────────
+    // ── Text Colors ─────────────────────────────────────────────────────
     public static readonly Vector4 GreenColor = new(0.0f, 1.0f, 0.0f, 1.0f);
     public static readonly Vector4 YellowColor = new(1.0f, 1.0f, 0.0f, 1.0f);
     public static readonly Vector4 GoldColor = new(0.85f, 0.65f, 0.13f, 1.0f);
     public static readonly Vector4 RedColor = new(1.0f, 0.0f, 0.0f, 1.0f);
     public static readonly Vector4 GrayColor = new(0.5f, 0.5f, 0.5f, 1.0f);
     public static readonly Vector4 WhiteColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+
+    // ── Cell Background Tints ────────────────────────────────────────────
+    public static readonly Vector4 PendingTint = new(0.8f, 0.6f, 0.0f, 0.3f);
+    public static readonly Vector4 SuccessTint = new(0.0f, 0.6f, 0.0f, 0.3f);
+    public static readonly Vector4 FailureTint = new(0.6f, 0.0f, 0.0f, 0.3f);
+    public static readonly Vector4 InactiveTint = new(0.5f, 0.5f, 0.5f, 0.3f);
+    public static readonly Vector4 TransparentTint = new(0.0f, 0.0f, 0.0f, 0.0f);
 
     // ── Window Flags ───────────────────────────────────────────────────
     public const ImGuiWindowFlags CompactWindowFlags =

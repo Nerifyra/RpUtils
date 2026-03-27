@@ -4,8 +4,10 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Encounters.Models;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.Features.Rolls.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 using Theme = RpUtils.UI.Theme;
 
@@ -15,6 +17,7 @@ internal class EncounterDetailTab
 {
     private readonly Dictionary<string, int> _initiativeBuffers = [];
     private readonly HashSet<string> _activeInputs = [];
+    private readonly RollConfigPopup _rollConfigPopup = new();
     private string _npcNameBuffer = string.Empty;
     private bool _openNpcPopup;
     private string _renameNpcBuffer = string.Empty;
@@ -67,7 +70,7 @@ internal class EncounterDetailTab
         {
             if (ImGuiComponents.IconButton($"##{encounterId}_dice", FontAwesomeIcon.DiceD20))
             {
-                // Roll for initiative
+                _rollConfigPopup.Open(encounterId, encounter);
             }
         }
 
@@ -92,6 +95,7 @@ internal class EncounterDetailTab
         }
 
         DrawNpcPopup(encounterId);
+        _rollConfigPopup.Draw(encounter);
     }
 
     private void DrawNpcPopup(string encounterId)
@@ -139,25 +143,104 @@ internal class EncounterDetailTab
 
     private void DrawParticipantsTable(string encounterId, EncounterState encounter, Lobby lobby)
     {
+        var isDm = lobby.IsModeratorOrAbove;
+        var rolls = Plugin.Rolls.GetRollsForEncounter(encounterId)
+            .Where(r => !r.IsInitiativeRoll)
+            .ToList();
+        var columnCount = 3 + rolls.Count; // Icon, Name, Initiative, + one per roll
+
         var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH;
-        using var table = ImRaii.Table($"Participants##{encounterId}", 3, flags);
+        using var table = ImRaii.Table($"Participants##{encounterId}", columnCount, flags);
         if (!table.Success) return;
 
         ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 20);
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Initiative", ImGuiTableColumnFlags.WidthFixed, 60);
-        ImGui.TableHeadersRow();
+
+        foreach (var roll in rolls)
+        {
+            ImGui.TableSetupColumn($"##roll_{roll.RollRequestId}", ImGuiTableColumnFlags.WidthFixed, 80);
+        }
+
+        // Manual header row so we can customize roll column headers
+        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+
+        ImGui.TableSetColumnIndex(0);
+        ImGui.TableHeader("##Icon");
+
+        ImGui.TableSetColumnIndex(1);
+        ImGui.TableHeader("Name");
+
+        ImGui.TableSetColumnIndex(2);
+        ImGui.TableHeader("Initiative");
+
+        for (var i = 0; i < rolls.Count; i++)
+        {
+            ImGui.TableSetColumnIndex(3 + i);
+            DrawRollColumnHeader(rolls[i], isDm);
+        }
 
         foreach (var participant in encounter.Participants)
         {
-            DrawParticipantRow(encounterId, participant, lobby.IsModeratorOrAbove);
+            DrawParticipantRow(encounterId, participant, isDm, rolls);
         }
 
         // Deferred rename popup (must be at the same ID stack level)
         DrawRenameNpcPopup(encounterId);
     }
 
-    private void DrawParticipantRow(string encounterId, EncounterParticipant participant, bool isDm)
+    private static void DrawRollColumnHeader(RollRequestState roll, bool isDm)
+    {
+        var rollLabel = string.IsNullOrWhiteSpace(roll.Name) ? "Roll" : roll.Name;
+
+        // Header cell background color based on roll status
+        var allResolved = roll.Participants.All(p => !p.IsPending);
+        var headerBgColor = !roll.IsActive ? Theme.InactiveTint
+            : allResolved ? Theme.SuccessTint
+            : Theme.PendingTint;
+        ImGui.TableSetBgColor(ImGuiTableBgTarget.CellBg, ImGui.GetColorU32(headerBgColor));
+
+        // Header text with DC
+        if (roll.DC.HasValue)
+        {
+            ImGui.Text(rollLabel);
+            ImGui.SameLine();
+            ImGui.TextDisabled($"({roll.DC.Value})");
+        }
+        else
+        {
+            ImGui.Text(rollLabel);
+        }
+
+        // Ellipsis menu button for DMs, right-aligned
+        if (isDm)
+        {
+            var buttonSize = ImGui.GetFrameHeight();
+            ImGui.SameLine(ImGui.GetColumnWidth() - buttonSize);
+            if (ImGuiComponents.IconButton($"##roll_menu_{roll.RollRequestId}", FontAwesomeIcon.EllipsisV))
+            {
+                ImGui.OpenPopup($"RollMenu##{roll.RollRequestId}");
+            }
+        }
+
+        using var popup = ImRaii.Popup($"RollMenu##{roll.RollRequestId}");
+        if (!popup.Success) return;
+
+        if (roll.IsActive)
+        {
+            if (ImGui.MenuItem("End Roll"))
+            {
+                Plugin.Rolls.EndRollRequest(roll.RollRequestId);
+            }
+        }
+
+        if (ImGui.MenuItem("Close Roll"))
+        {
+            Plugin.Rolls.CloseRollRequest(roll.RollRequestId);
+        }
+    }
+
+    private void DrawParticipantRow(string encounterId, EncounterParticipant participant, bool isDm, List<RollRequestState> rolls)
     {
         ImGui.TableNextRow();
 
@@ -258,6 +341,14 @@ internal class EncounterDetailTab
             {
                 _activeInputs.Remove(participant.ParticipantId);
             }
+        }
+
+        // Roll result columns
+        foreach (var roll in rolls)
+        {
+            ImGui.TableNextColumn();
+            var rollParticipant = roll.Participants.FirstOrDefault(p => p.ParticipantId == participant.ParticipantId);
+            RollResultCell.Draw(encounterId, roll.RollRequestId, rollParticipant, roll.DC, roll.IsActive, isDm);
         }
     }
 
