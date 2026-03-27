@@ -18,6 +18,7 @@ public static class Theme
     public static readonly Vector4 PendingTint = new(0.8f, 0.6f, 0.0f, 0.3f);
     public static readonly Vector4 SuccessTint = new(0.0f, 0.6f, 0.0f, 0.3f);
     public static readonly Vector4 FailureTint = new(0.6f, 0.0f, 0.0f, 0.3f);
+    public static readonly Vector4 NextRollTint = new(0.85f, 0.65f, 0.13f, 0.6f);
     public static readonly Vector4 InactiveTint = new(0.5f, 0.5f, 0.5f, 0.3f);
     public static readonly Vector4 TransparentTint = new(0.0f, 0.0f, 0.0f, 0.0f);
 

@@ -13,7 +13,7 @@ internal static class RollResultCell
     private static readonly Dictionary<string, int> _buffers = [];
     private static readonly HashSet<string> _activeInputs = [];
 
-    public static void Draw(string encounterId, string rollRequestId, RollParticipant? rollParticipant, int? dc, bool isActive, bool isDm)
+    public static void Draw(string encounterId, string rollRequestId, RollParticipant? rollParticipant, int? dc, bool isActive, bool isDm, bool isNextNpc = false)
     {
         if (rollParticipant == null)
         {
@@ -26,7 +26,11 @@ internal static class RollResultCell
 
         // Determine cell background color
         Vector4 bgColor;
-        if (rollParticipant.IsPending)
+        if (rollParticipant.IsPending && isNextNpc)
+        {
+            bgColor = Theme.NextRollTint;
+        }
+        else if (rollParticipant.IsPending)
         {
             bgColor = Theme.PendingTint;
         }

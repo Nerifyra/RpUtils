@@ -180,9 +180,51 @@ internal class EncounterDetailTab
             DrawRollColumnHeader(rolls[i], isDm);
         }
 
+        // Determine which cells will receive the next roll from the local player.
+        // Matches ChatRollListener logic: rolls are processed in creation order,
+        // player matches are checked first, then NPCs in initiative order (DM only).
+        var nextRollTargetIds = new HashSet<string>();
+        var activeRolls = rolls.Where(r => r.IsActive).OrderBy(r => r.CreatedAtUtc).ToList();
+        var selfHighlighted = false;
+
+        foreach (var roll in activeRolls)
+        {
+            // Check if the local player is still pending in this roll
+            var selfParticipant = roll.Participants
+                .FirstOrDefault(p => p.IsPending && !p.IsNpc && p.PlayerId == lobby.PlayerId);
+
+            if (selfParticipant != null && !selfHighlighted)
+            {
+                // Only highlight the first (oldest) roll — that's where the listener assigns
+                nextRollTargetIds.Add($"{roll.RollRequestId}_{selfParticipant.ParticipantId}");
+                selfHighlighted = true;
+                continue;
+            }
+
+            // For DMs: if they've already rolled in this request, highlight the next pending NPC
+            if (isDm && selfParticipant == null)
+            {
+                var pendingNpcIds = roll.Participants
+                    .Where(p => p.IsPending && p.IsNpc)
+                    .Select(p => p.ParticipantId)
+                    .ToHashSet();
+
+                if (pendingNpcIds.Count > 0)
+                {
+                    var firstNpcId = encounter.Participants
+                        .Where(p => pendingNpcIds.Contains(p.ParticipantId))
+                        .Select(p => p.ParticipantId)
+                        .FirstOrDefault();
+
+                    if (firstNpcId != null)
+                        nextRollTargetIds.Add($"{roll.RollRequestId}_{firstNpcId}");
+                }
+            }
+        }
+
         foreach (var participant in encounter.Participants)
         {
-            DrawParticipantRow(encounterId, participant, isDm, rolls);
+            DrawParticipantRow(encounterId, participant, isDm, rolls, nextRollTargetIds);
         }
 
         // Deferred rename popup (must be at the same ID stack level)
@@ -240,7 +282,7 @@ internal class EncounterDetailTab
         }
     }
 
-    private void DrawParticipantRow(string encounterId, EncounterParticipant participant, bool isDm, List<RollRequestState> rolls)
+    private void DrawParticipantRow(string encounterId, EncounterParticipant participant, bool isDm, List<RollRequestState> rolls, HashSet<string> nextRollTargetIds)
     {
         ImGui.TableNextRow();
 
@@ -348,7 +390,8 @@ internal class EncounterDetailTab
         {
             ImGui.TableNextColumn();
             var rollParticipant = roll.Participants.FirstOrDefault(p => p.ParticipantId == participant.ParticipantId);
-            RollResultCell.Draw(encounterId, roll.RollRequestId, rollParticipant, roll.DC, roll.IsActive, isDm);
+            var isNextTarget = nextRollTargetIds.Contains($"{roll.RollRequestId}_{participant.ParticipantId}");
+            RollResultCell.Draw(encounterId, roll.RollRequestId, rollParticipant, roll.DC, roll.IsActive, isDm, isNextTarget);
         }
     }
 
