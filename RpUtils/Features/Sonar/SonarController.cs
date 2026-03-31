@@ -116,7 +116,7 @@ public sealed class SonarController : ISonarController, IDisposable
 
         Task.Run(async () =>
         {
-            Plugin.Log.Debug("Sending location update: {World}:{Map}:{Activity} at {X}, {Z}", world, currentMap, CurrentActivity, pos.X, pos.Z);
+            Plugin.Log.Debug($"Sending location update: {world}:{currentMap}:{CurrentActivity} at {pos.X}, {pos.Z}");
             await _sonarService.SendLocation(world, currentMapText, pos.X, pos.Z, CurrentActivity);
         });
     }
@@ -130,7 +130,7 @@ public sealed class SonarController : ISonarController, IDisposable
         _lastMap = String.Empty;
         _lastActivity = SonarActivity.None;
         _sendTimer.Restart();
-        Plugin.Log.Info("Started sharing location with activity: {Activity}", CurrentActivity);
+        Plugin.Log.Info($"Started sharing location with activity: {CurrentActivity}");
         OnStateChanged?.Invoke();
 
         // Send immediately rather than waiting for the first interval
@@ -159,7 +159,7 @@ public sealed class SonarController : ISonarController, IDisposable
     public Task SetActivity(string activity)
     {
         CurrentActivity = activity;
-        Plugin.Log.Info("Activity set to: {Activity}", activity);
+        Plugin.Log.Debug($"Activity set to: {activity}");
         OnStateChanged?.Invoke();
         return Task.CompletedTask;
     }
@@ -288,16 +288,16 @@ public sealed class SonarController : ISonarController, IDisposable
         if (map == null) return;
 
         var mapId = map.Value.Id.ToString();
-        Plugin.Log.Debug("Fetching RP positions for {World}:{Map}", world, mapId);
+        Plugin.Log.Debug($"Fetching RP positions for {world}:{mapId}");
 
         var positions = await _sonarService.GetPlayersInWorldMap(world, mapId);
         if (positions is null || positions.Count == 0)
         {
-            Plugin.Log.Debug("No positions found for {World}:{Map}", world, mapId);
+            Plugin.Log.Debug($"No positions found for {world}:{mapId}");
             return;
         }
 
-        Plugin.Log.Info("Found {Count} players in {World}:{Map}", positions.Count, world, mapId);
+        Plugin.Log.Debug($"Found {positions.Count} players in {world}:{mapId}");
         PaintMapMarkers(positions);
     }
 
@@ -328,7 +328,7 @@ public sealed class SonarController : ISonarController, IDisposable
             agent->AddMapMarker(pos, 61545, 0, null, 0);
         }
 
-        Plugin.Log.Debug("Painted {Count} markers on map.", positions.Count);
+        Plugin.Log.Debug($"Painted {positions.Count} markers on map.");
     }
 
     public void Dispose()

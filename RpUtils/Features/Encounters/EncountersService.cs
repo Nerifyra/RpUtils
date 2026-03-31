@@ -31,7 +31,7 @@ public sealed class EncountersService
         {
             if (!_hub.IsConnected) return false;
             await _hub.Connection!.InvokeAsync("UpdateEncounter", lobbyId, encounterId, name, playerIds);
-            Plugin.Log.Info("Updated encounter in lobby {LobbyId}", lobbyId);
+            Plugin.Log.Debug($"Updated encounter in lobby {lobbyId}");
             return true;
         }
         catch (Exception ex)
@@ -92,7 +92,7 @@ public sealed class EncountersService
         {
             if (!_hub.IsConnected) return false;
             await _hub.Connection!.InvokeAsync("AddNpcParticipant", encounterId, displayName);
-            Plugin.Log.Info("Added NPC to encounter {EncounterId}", encounterId);
+            Plugin.Log.Debug($"Added NPC to encounter {encounterId}");
             return true;
         }
         catch (Exception ex)
@@ -138,7 +138,7 @@ public sealed class EncountersService
         {
             if (!_hub.IsConnected) return false;
             await _hub.Connection!.InvokeAsync("EndEncounter", encounterId);
-            Plugin.Log.Info("Ended encounter {EncounterId}", encounterId);
+            Plugin.Log.Debug($"Ended encounter {encounterId}");
             return true;
         }
         catch (Exception ex)

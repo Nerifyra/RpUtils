@@ -26,8 +26,13 @@ public sealed class RollsController : IRollsController, IDisposable
 
     private void OnRollRequestStateUpdated(RollRequestState state)
     {
+        var isNew = !_rollRequests.ContainsKey(state.RollRequestId);
+        var previous = isNew ? null : _rollRequests[state.RollRequestId];
+
         _rollRequests[state.RollRequestId] = state;
         OnStateChanged?.Invoke();
+
+        RollChatEcho.OnRollUpdate(state, isNew, previous);
     }
 
     private void OnRollRequestClosedHandler(string rollRequestId)
@@ -105,4 +110,5 @@ public sealed class RollsController : IRollsController, IDisposable
         _service.OnRollRequestStateUpdated -= OnRollRequestStateUpdated;
         _service.OnRollRequestClosed -= OnRollRequestClosedHandler;
     }
+
 }

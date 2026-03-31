@@ -29,4 +29,5 @@ public interface ILobbiesController
     Task CreateGhostPlayer(string lobbyId, string displayName, string characterName);
     Task RemoveGhostPlayer(string lobbyId, string playerId);
     Task RefreshLobbies();
+    (string DisplayName, string CharacterName)? GetTargetPlayerInfo();
 }

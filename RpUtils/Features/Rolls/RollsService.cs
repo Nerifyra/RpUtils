@@ -31,7 +31,7 @@ public sealed class RollsService
         {
             if (!_hub.IsConnected) return false;
             await _hub.Connection!.InvokeAsync("CreateRollRequest", encounterId, name, dc, isInitiativeRoll, participantIds);
-            Plugin.Log.Info("Created roll request for encounter {EncounterId}", encounterId);
+            Plugin.Log.Debug($"Created roll request for encounter {encounterId}");
             return true;
         }
         catch (Exception ex)
@@ -47,7 +47,7 @@ public sealed class RollsService
         {
             if (!_hub.IsConnected) return false;
             await _hub.Connection!.InvokeAsync("SubmitRoll", rollRequestId, participantId, value);
-            Plugin.Log.Info("Submitted roll for participant {ParticipantId} in roll request {RollRequestId}", participantId, rollRequestId);
+            Plugin.Log.Debug($"Submitted roll for {participantId} in roll request {rollRequestId}");
             return true;
         }
         catch (Exception ex)
@@ -63,7 +63,7 @@ public sealed class RollsService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("EndRollRequest", rollRequestId);
-            Plugin.Log.Info("Ended roll request {RollRequestId}", rollRequestId);
+            Plugin.Log.Debug($"Ended roll request {rollRequestId}");
         }
         catch (Exception ex)
         {
@@ -77,7 +77,7 @@ public sealed class RollsService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("CloseRollRequest", rollRequestId);
-            Plugin.Log.Info("Closed roll request {RollRequestId}", rollRequestId);
+            Plugin.Log.Debug($"Closed roll request {rollRequestId}");
         }
         catch (Exception ex)
         {

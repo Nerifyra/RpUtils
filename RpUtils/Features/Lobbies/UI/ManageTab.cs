@@ -80,8 +80,10 @@ internal class ManageTab
             {
                 if (ImGui.SmallButton(FontAwesomeIcon.UserPlus.ToIconString() + $"##AddGhost{_lobbyId}"))
                 {
-                    _ghostDisplayNameBuffer = string.Empty;
-                    _ghostCharNameBuffer = string.Empty;
+                    // Auto-populate from current target if it's a player character
+                    var targetInfo = Plugin.Lobbies.GetTargetPlayerInfo();
+                    _ghostDisplayNameBuffer = targetInfo?.DisplayName ?? string.Empty;
+                    _ghostCharNameBuffer = targetInfo?.CharacterName ?? string.Empty;
                     _openGhostPopup = true;
                 }
             }

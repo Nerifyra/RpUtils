@@ -14,6 +14,12 @@ public static class Theme
     public static readonly Vector4 GrayColor = new(0.5f, 0.5f, 0.5f, 1.0f);
     public static readonly Vector4 WhiteColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
+    // ── Chat SeString Colors (FFXIV UI foreground IDs) ──────────────────
+    public const ushort ChatPrefixColor = 540;   // Soft gold
+    public const ushort ChatHighlightColor = 34;  // Bright white
+    public const ushort ChatGreenColor = 60;
+    public const ushort ChatRedColor = 17;
+
     // ── Cell Background Tints ────────────────────────────────────────────
     public static readonly Vector4 PendingTint = new(0.8f, 0.6f, 0.0f, 0.3f);
     public static readonly Vector4 SuccessTint = new(0.0f, 0.6f, 0.0f, 0.3f);

@@ -50,8 +50,7 @@ public sealed class ChatRollListener : IDisposable
 
             var (rollValue, rollerName, isLocalPlayer) = parsed.Value;
 
-            Plugin.Log.Info("Chat roll detected: '{RollerName}' rolled {Value} (isLocal={IsLocal})",
-                rollerName, rollValue, isLocalPlayer);
+            Plugin.Log.Debug($"Chat roll detected: '{rollerName}' rolled {rollValue} (isLocal={isLocalPlayer})");
 
             var myPlayerId = Plugin.Lobbies.Lobbies.Values
                 .Select(l => l.PlayerId)
@@ -179,7 +178,7 @@ public sealed class ChatRollListener : IDisposable
                 }
             }
 
-            Plugin.Log.Debug("No pending participant found for roll by '{CharacterName}'", characterName);
+            Plugin.Log.Debug($"No pending participant found for roll by '{characterName}'");
         }
         catch (Exception ex)
         {
@@ -224,8 +223,7 @@ public sealed class ChatRollListener : IDisposable
     private static async Task SubmitRollResult(RollRequestState roll, EncounterState encounter, RollParticipant participant, int value)
     {
         var label = participant.IsNpc ? "NPC" : "participant";
-        Plugin.Log.Info("Submitting roll {Value} for {Label} '{DisplayName}' in roll '{RollName}'",
-            value, label, participant.DisplayName, roll.Name);
+        Plugin.Log.Debug($"Submitting roll {value} for {label} '{participant.DisplayName}' in roll '{roll.Name}'");
 
         await Plugin.Rolls.SubmitRoll(roll.RollRequestId, participant.ParticipantId, value);
 

@@ -33,7 +33,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return null;
             var result = await _hub.Connection!.InvokeAsync<Lobby>("CreateLobby", characterName);
-            Plugin.Log.Info("Created lobby: {LobbyId}", result.LobbyId);
+            Plugin.Log.Debug($"Created lobby: {result.LobbyId}");
             return result;
         }
         catch (Exception ex)
@@ -49,7 +49,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return null;
             var result = await _hub.Connection!.InvokeAsync<Lobby>("JoinLobby", joinCode, characterName);
-            Plugin.Log.Info("Joined lobby: {LobbyId}", result.LobbyId);
+            Plugin.Log.Debug($"Joined lobby: {result.LobbyId}");
             return result;
         }
         catch (Exception ex)
@@ -65,7 +65,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("LeaveLobby", lobbyId);
-            Plugin.Log.Info("Left lobby: {LobbyId}", lobbyId);
+            Plugin.Log.Debug($"Left lobby: {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -79,7 +79,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return null;
             var result = await _hub.Connection!.InvokeAsync<List<Lobby>>("GetMyLobbies");
-            Plugin.Log.Debug("Got {Count} lobbies.", result.Count);
+            Plugin.Log.Debug($"Got {result.Count} lobbies.");
             return result;
         }
         catch (Exception ex)
@@ -95,7 +95,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return null;
             var result = await _hub.Connection!.InvokeAsync<LobbyState>("GetLobbyState", lobbyId);
-            Plugin.Log.Debug("Got lobby state: {LobbyId}", lobbyId);
+            Plugin.Log.Debug($"Got lobby state: {lobbyId}");
             return result;
         }
         catch (Exception ex)
@@ -111,7 +111,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("CloseLobby", lobbyId);
-            Plugin.Log.Info("Closed lobby: {LobbyId}", lobbyId);
+            Plugin.Log.Debug($"Closed lobby: {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -125,7 +125,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("KickMember", lobbyId, targetPlayerId);
-            Plugin.Log.Info("Kicked player {PlayerId} from lobby {LobbyId}", targetPlayerId, lobbyId);
+            Plugin.Log.Debug($"Kicked player {targetPlayerId} from lobby {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -139,7 +139,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("TransferOwnership", lobbyId, targetPlayerId);
-            Plugin.Log.Info("Transferred ownership of {LobbyId} to {PlayerId}", lobbyId, targetPlayerId);
+            Plugin.Log.Debug($"Transferred ownership of {lobbyId} to {targetPlayerId}");
         }
         catch (Exception ex)
         {
@@ -153,7 +153,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("PromoteMember", lobbyId, targetPlayerId);
-            Plugin.Log.Info("Promoted player {PlayerId} in lobby {LobbyId}", targetPlayerId, lobbyId);
+            Plugin.Log.Debug($"Promoted player {targetPlayerId} in lobby {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -167,7 +167,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("DemoteMember", lobbyId, targetPlayerId);
-            Plugin.Log.Info("Demoted player {PlayerId} in lobby {LobbyId}", targetPlayerId, lobbyId);
+            Plugin.Log.Debug($"Demoted player {targetPlayerId} in lobby {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -181,7 +181,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("RegenerateJoinCode", lobbyId);
-            Plugin.Log.Info("Regenerated join code for {LobbyId}", lobbyId);
+            Plugin.Log.Debug($"Regenerated join code for {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -195,7 +195,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("RenameLobby", lobbyId, newName);
-            Plugin.Log.Info("Renamed lobby {LobbyId} to {Name}", lobbyId, newName);
+            Plugin.Log.Debug($"Renamed lobby {lobbyId} to {newName}");
         }
         catch (Exception ex)
         {
@@ -209,7 +209,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("UpdateMemberDisplayName", lobbyId, targetPlayerId, newDisplayName);
-            Plugin.Log.Info("Updated display name for {PlayerId} in lobby {LobbyId}", targetPlayerId, lobbyId);
+            Plugin.Log.Debug($"Updated display name for {targetPlayerId} in lobby {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -223,7 +223,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("UpdateMemberCharacterName", lobbyId, targetPlayerId, newCharacterName);
-            Plugin.Log.Info("Updated character name for {PlayerId} in lobby {LobbyId}", targetPlayerId, lobbyId);
+            Plugin.Log.Debug($"Updated character name for {targetPlayerId} in lobby {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -237,7 +237,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("CreateGhostPlayer", lobbyId, displayName, characterName);
-            Plugin.Log.Info("Created ghost player in lobby {LobbyId}", lobbyId);
+            Plugin.Log.Debug($"Created ghost player in lobby {lobbyId}");
         }
         catch (Exception ex)
         {
@@ -251,7 +251,7 @@ public sealed class LobbiesService
         {
             if (!_hub.IsConnected) return;
             await _hub.Connection!.InvokeAsync("RemoveGhostPlayer", lobbyId, targetPlayerId);
-            Plugin.Log.Info("Removed ghost player {PlayerId} from lobby {LobbyId}", targetPlayerId, lobbyId);
+            Plugin.Log.Debug($"Removed ghost player {targetPlayerId} from lobby {lobbyId}");
         }
         catch (Exception ex)
         {

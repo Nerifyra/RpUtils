@@ -181,6 +181,18 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         }
     }
 
+    public (string DisplayName, string CharacterName)? GetTargetPlayerInfo()
+    {
+        if (Plugin.ObjectTable.LocalPlayer?.TargetObject is not Dalamud.Game.ClientState.Objects.SubKinds.IPlayerCharacter target)
+            return null;
+
+        var fullName = target.Name.TextValue;
+        var world = target.HomeWorld.Value.Name.ToString();
+        var displayName = fullName.Split(' ')[0];
+        var characterName = $"{fullName}@{world}";
+        return (displayName, characterName);
+    }
+
     private static string GetCharacterName()
     {
         var localPlayer = Plugin.ObjectTable.LocalPlayer;
