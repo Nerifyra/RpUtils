@@ -11,5 +11,11 @@ public class Configuration : IPluginConfiguration
     public bool EnableRpUtils { get; set; } = true;
     public bool ShowToolbar { get; set; } = true;
 
+    // ── Chat Echo Alerts ──────────────────────────────────────────────
+    public bool RollRequestedChatAlert { get; set; } = true;
+    public bool RollResultsChatAlert { get; set; } = true;
+    public bool InitiativeRequestedChatAlert { get; set; } = true;
+    public bool InitiativeResultsChatAlert { get; set; } = true;
+
     public void Save() => Plugin.PluginInterface.SavePluginConfig(this);
 }

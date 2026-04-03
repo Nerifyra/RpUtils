@@ -1,4 +1,4 @@
-﻿namespace RpUtils.Sonar.Models;
+﻿namespace RpUtils.Features.Sonar.Models;
 
 public class Position(float x, float z)
 {
