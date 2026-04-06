@@ -17,6 +17,7 @@ public sealed class UIManager : IDisposable
     private readonly LobbiesWindow _lobbiesWindow;
     private readonly ShareLocationWindow _shareLocationWindow;
     private readonly FindRoleplayWindow _findRoleplayWindow;
+    private readonly ChangelogWindow _changelogWindow;
 
     private readonly Dictionary<string, LobbyDetailWindow> _lobbyDetailWindows = [];
 
@@ -31,6 +32,7 @@ public sealed class UIManager : IDisposable
         _lobbiesWindow = new LobbiesWindow();
         _shareLocationWindow = new ShareLocationWindow();
         _findRoleplayWindow = new FindRoleplayWindow();
+        _changelogWindow = new ChangelogWindow();
         _toolbarWindow = new ToolbarWindow(
             () => _shareLocationWindow.Toggle(),
             () => _findRoleplayWindow.Toggle(),
@@ -43,6 +45,13 @@ public sealed class UIManager : IDisposable
         _windowSystem.AddWindow(_shareLocationWindow);
         _windowSystem.AddWindow(_findRoleplayWindow);
         _windowSystem.AddWindow(_toolbarWindow);
+        _windowSystem.AddWindow(_changelogWindow);
+
+        // Auto-open changelog on major/minor version change (if enabled)
+        var currentRelease = PluginConstants.GetReleaseVersion(PluginConstants.PluginVersion);
+        if (Plugin.Configuration.ShowChangelogOnUpdate
+            && Plugin.Configuration.LastSeenChangelogVersion != currentRelease)
+            _changelogWindow.IsOpen = true;
 
         // Subscribe to lobby lifecycle events
         Plugin.Lobbies.OnLobbyEntered += OpenLobbyDetail;
@@ -52,6 +61,7 @@ public sealed class UIManager : IDisposable
     public void Draw() => _windowSystem.Draw();
     public void ToggleConfigWindow() => _configWindow.Toggle();
     public void ToggleToolbarWindow() => _toolbarWindow.Toggle();
+    public void ToggleChangelogWindow() => _changelogWindow.Toggle();
 
     public void OpenLobbyDetail(string lobbyId)
     {

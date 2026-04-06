@@ -17,5 +17,9 @@ public class Configuration : IPluginConfiguration
     public bool InitiativeRequestedChatAlert { get; set; } = true;
     public bool InitiativeResultsChatAlert { get; set; } = true;
 
+    // ── Changelog ─────────────────────────────────────────────────────
+    public string LastSeenChangelogVersion { get; set; } = "";
+    public bool ShowChangelogOnUpdate { get; set; } = true;
+
     public void Save() => Plugin.PluginInterface.SavePluginConfig(this);
 }
