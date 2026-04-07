@@ -53,7 +53,7 @@ public sealed class Changelog
     private static void AddVersion_0_4(ChangelogBuilder builder)
     {
         builder
-            .NextVersion("0.4")
+            .NextVersion("0.5.0")
                 .Important("First pass at Lobbies")
                     .Detail("Lobbies are created and can be joined with a generated code.")
                     .Detail("Basic management features like kicking, renaming, and promoting members.")
