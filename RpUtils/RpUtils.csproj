@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
   <PropertyGroup>
-    <PluginVersion>0.4.1</PluginVersion>
+    <PluginVersion>0.5.0</PluginVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <Platforms>x64</Platforms>
-    <Company>Kass</Company>
+    <Company>Nerifyra</Company>
     <AssemblyTitle>RpUtils</AssemblyTitle>
     <Product>RpUtils</Product>
     <OutputPath>bin\$(Configuration)\</OutputPath>
