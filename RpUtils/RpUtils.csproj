@@ -6,8 +6,9 @@
   <PropertyGroup>
     <Platforms>x64</Platforms>
     <Company>Nerifyra</Company>
-    <AssemblyTitle>RpUtils</AssemblyTitle>
-    <Product>RpUtils</Product>
+    <AssemblyName>RpUtilsPreview</AssemblyName>
+    <AssemblyTitle>RpUtilsPreview</AssemblyTitle>
+    <Product>RpUtilsPreview</Product>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -41,7 +42,7 @@
   
 
   <ItemGroup>
-    <Content Include="RpUtils.yaml" />
+    <Content Include="RpUtilsPreview.yaml" />
   </ItemGroup>
 
 </Project>
