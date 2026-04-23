@@ -53,7 +53,9 @@ public sealed class Changelog
 
     private static void AddVersion_0_5_1(ChangelogBuilder builder)
     {
-        builder.NextVersion("0.5.1");
+        builder.NextVersion("0.5.1")
+            .Minor("Requested initiative rolls can now be ended early.")
+            .Minor("Various visual fixes.");
     }
 
     private static void AddVersion_0_5_0(ChangelogBuilder builder)
