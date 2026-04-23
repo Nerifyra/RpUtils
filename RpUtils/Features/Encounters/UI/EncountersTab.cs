@@ -64,7 +64,7 @@ internal class EncountersTab
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
             ImGui.AlignTextToFramePadding();
-            ImGui.Text(FontAwesomeIcon.Khanda.ToIconString());
+            ImGui.Text(FontAwesomeIcon.Shield.ToIconString());
         }
         ImGui.SameLine();
         if (ImGui.Button(buttonText))
