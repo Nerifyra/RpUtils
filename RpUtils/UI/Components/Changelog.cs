@@ -55,6 +55,7 @@ public sealed class Changelog
     {
         builder.NextVersion("0.5.1")
             .Minor("Requested initiative rolls can now be ended early.")
+            .Minor("NPCs are no longer duplicated when editing encounters.")
             .Minor("Various visual fixes.");
     }
 
