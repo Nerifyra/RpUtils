@@ -45,12 +45,18 @@ public sealed class Changelog
         var builder = new ChangelogBuilder();
 
         // Add new versions at the top
-        AddVersion_0_4(builder);
+        AddVersion_0_5_1(builder);
+        AddVersion_0_5_0(builder);
 
         return builder.Build();
     }
 
-    private static void AddVersion_0_4(ChangelogBuilder builder)
+    private static void AddVersion_0_5_1(ChangelogBuilder builder)
+    {
+        builder.NextVersion("0.5.1");
+    }
+
+    private static void AddVersion_0_5_0(ChangelogBuilder builder)
     {
         builder
             .NextVersion("0.5.0")
