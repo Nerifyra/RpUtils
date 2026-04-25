@@ -1,6 +1,7 @@
 using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Rolls.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace RpUtils.Features.Rolls;
 public sealed class RollsController : IRollsController, IDisposable
 {
     private readonly RollsService _service;
-    private readonly Dictionary<string, RollRequestState> _rollRequests = [];
+    private readonly ConcurrentDictionary<string, RollRequestState> _rollRequests = new();
 
     public IReadOnlyDictionary<string, RollRequestState> RollRequests => _rollRequests;
 
@@ -26,8 +27,8 @@ public sealed class RollsController : IRollsController, IDisposable
 
     private void OnRollRequestStateUpdated(RollRequestState state)
     {
-        var isNew = !_rollRequests.ContainsKey(state.RollRequestId);
-        var previous = isNew ? null : _rollRequests[state.RollRequestId];
+        _rollRequests.TryGetValue(state.RollRequestId, out var previous);
+        var isNew = previous == null;
 
         _rollRequests[state.RollRequestId] = state;
         OnStateChanged?.Invoke();
@@ -37,7 +38,7 @@ public sealed class RollsController : IRollsController, IDisposable
 
     private void OnRollRequestClosedHandler(string rollRequestId)
     {
-        _rollRequests.Remove(rollRequestId);
+        _rollRequests.TryRemove(rollRequestId, out _);
         OnStateChanged?.Invoke();
     }
 
@@ -85,7 +86,7 @@ public sealed class RollsController : IRollsController, IDisposable
         // Remove old rolls for this encounter
         var toRemove = _rollRequests.Where(kvp => kvp.Value.EncounterId == encounterId).Select(kvp => kvp.Key).ToList();
         foreach (var key in toRemove)
-            _rollRequests.Remove(key);
+            _rollRequests.TryRemove(key, out _);
 
         // Add fresh ones
         foreach (var roll in rolls)
