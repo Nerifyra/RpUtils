@@ -10,6 +10,7 @@ public class Configuration : IPluginConfiguration
 
     public bool EnableRpUtils { get; set; } = true;
     public bool ShowToolbar { get; set; } = true;
+    public bool LinkSonarSharingToRoleplayingStatus { get; set; } = true;
 
     // ── Chat Echo Alerts ──────────────────────────────────────────────
     public bool RollRequestedChatAlert { get; set; } = true;

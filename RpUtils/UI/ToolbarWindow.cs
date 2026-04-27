@@ -41,9 +41,14 @@ internal class ToolbarWindow : Window
     private void DrawSonarButton()
     {
         var sonar = Plugin.Sonar;
-        var tooltip = sonar.IsSharingLocation
-            ? "Sonar\nLeft click: Stop sharing location\nRight click: Open location sharing window"
-            : "Sonar\nLeft click: Start sharing location\nRight click: Open location sharing window";
+        var tiedToRoleplaying = Plugin.Configuration.LinkSonarSharingToRoleplayingStatus;
+        var action = sonar.IsSharingLocation ? "Stop" : "Start";
+
+        var header = tiedToRoleplaying ? "Sonar (controlled by /roleplaying status)" : "Sonar";
+        var primaryLine = tiedToRoleplaying
+            ? $"Use /roleplaying to {action.ToLowerInvariant()} sharing"
+            : $"Left click: {action} sharing location";
+        var tooltip = $"{header}\n{primaryLine}\nRight click: Open location sharing window";
 
         if (sonar.IsSharingLocation && _rpIcon != null && _rpIcon.TryGetWrap(out var texture, out _))
         {
@@ -54,7 +59,7 @@ internal class ToolbarWindow : Window
             ImGuiComponents.IconButton(FontAwesomeIcon.MapMarkerAlt);
         }
 
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+        if (!tiedToRoleplaying && ImGui.IsItemClicked(ImGuiMouseButton.Left))
         {
             sonar.ToggleSharing();
         }

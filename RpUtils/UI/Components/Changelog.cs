@@ -54,6 +54,8 @@ public sealed class Changelog
     private static void AddVersion_0_5_1(ChangelogBuilder builder)
     {
         builder.NextVersion("0.5.1")
+            .Important("Added option to link sonar location sharing to /roleplaying.")
+                .Detail("Linking roleplay sonar location sharing can be toggled on and off in configuration menu.")
             .Minor("Fixes around multiple simulatenous rolls resulting in subsequent rolls not tracking.")
                 .Detail("The roll collection is still a bit fragile while testing. Please report any similar issues!")
             .Minor("Requested initiative rolls can now be ended early.")

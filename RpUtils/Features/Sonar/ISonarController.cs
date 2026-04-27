@@ -14,6 +14,7 @@ public interface ISonarController
     Task StartSharing();
     Task StopSharing();
     Task SetActivity(string activity);
+    void ResetRoleplayingStatus();
 
     IReadOnlyList<WorldMapGroup> GroupedCounts { get; }
     int WatchingCount { get; }
