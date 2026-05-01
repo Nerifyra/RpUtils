@@ -21,7 +21,7 @@ internal class ShareLocationWindow : Window
         var selected = SonarActivity.DisplayName(sonar.CurrentActivity);
 
         using var combo = ImRaii.Combo("##RoleplayActivity", selected);
-        if (!combo) return;
+        if (!combo.Success) return;
 
         foreach (var activity in SonarActivity.All)
         {

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
+﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
-    <PluginVersion>0.5.1</PluginVersion>
+    <PluginVersion>0.6.0</PluginVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,8 +34,8 @@
       <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.7" />
   </ItemGroup>
 
   

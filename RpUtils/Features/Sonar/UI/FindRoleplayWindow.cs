@@ -59,7 +59,7 @@ internal class FindRoleplayWindow : Window
         }
 
         using var table = ImRaii.Table("Find Roleplay", 2, TreeTableFlags);
-        if (!table) return;
+        if (!table.Success) return;
 
         ImGui.TableSetupColumn("Location", ImGuiTableColumnFlags.NoHide | ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthFixed, 50);
@@ -79,7 +79,7 @@ internal class FindRoleplayWindow : Window
         ImGui.TableNextColumn();
         ImGui.Text(world.TotalCount.ToString());
 
-        if (!worldNode) return;
+        if (!worldNode.Success) return;
 
         foreach (var map in world.Maps)
         {
@@ -95,7 +95,7 @@ internal class FindRoleplayWindow : Window
         ImGui.TableNextColumn();
         ImGui.Text(map.TotalCount.ToString());
 
-        if (!mapNode) return;
+        if (!mapNode.Success) return;
 
         foreach (var activity in map.Activities)
         {
