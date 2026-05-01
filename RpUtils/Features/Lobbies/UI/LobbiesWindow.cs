@@ -5,6 +5,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using RpUtils.Features.Lobbies.Models;
 using RpUtils.UI;
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace RpUtils.Features.Lobbies.UI;
@@ -83,10 +84,12 @@ internal class LobbiesWindow : Window
     private void DrawLobbyItem(Lobby lobby)
     {
         var label = $"{lobby.State.Name} ({lobby.State.Members.Count})";
-        if (ImGui.Selectable($"{label}##{lobby.LobbyId}"))
+        var rowHeight = ImGui.GetFrameHeight();
+        if (ImGui.Selectable($"{label}##{lobby.LobbyId}", false, ImGuiSelectableFlags.None, new Vector2(0, rowHeight)))
         {
             Plugin.UI.OpenLobbyDetail(lobby.LobbyId);
         }
+        ImGui.SetItemAllowOverlap();
 
         ImGui.SameLine(ImGui.GetContentRegionAvail().X - ImGui.GetFrameHeight());
         var tooltip = lobby.IsOwner ? "Close Lobby" : "Leave Lobby";

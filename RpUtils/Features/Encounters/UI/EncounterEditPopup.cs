@@ -34,7 +34,7 @@ internal class EncounterEditPopup
     {
         _encounterId = encounter.EncounterId;
         _encounterName = encounter.Name;
-        _participantSelector.SelectAll(encounter.Participants.Select(p => p.PlayerId));
+        _participantSelector.SelectAll(encounter.Participants.Where(p => !p.IsNpc).Select(p => p.PlayerId));
         _openPopup = true;
     }
 

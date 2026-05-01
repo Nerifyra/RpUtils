@@ -54,6 +54,20 @@ internal static class GeneralConfigTab
 
         ImGui.Spacing();
 
+        var tieSharing = config.LinkSonarSharingToRoleplayingStatus;
+        if (ImGui.Checkbox("Link sonar location sharing to /roleplaying", ref tieSharing))
+        {
+            config.LinkSonarSharingToRoleplayingStatus = tieSharing;
+            config.Save();
+            Plugin.Sonar.ResetRoleplayingStatus();
+        }
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip("When enabled, your location sharing will automatically\nstart and stop when using the /roleplaying command.\nThis will disable toggling location sharing through the sonar button.");
+        }
+
+        ImGui.Spacing();
+
         var showChangelog = config.ShowChangelogOnUpdate;
         if (ImGui.Checkbox("Show changelog on important updates", ref showChangelog))
         {

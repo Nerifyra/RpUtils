@@ -39,6 +39,10 @@ public sealed class SonarController : ISonarController, IDisposable
     private int _watchingCount;
     private bool _isFetchingCounts;
 
+    // Online Status RowId 22 = Roleplaying (set by /roleplaying)
+    private const uint RoleplayingOnlineStatusId = 22;
+    private bool? _wasRoleplaying;
+
     public IReadOnlyList<WorldMapGroup> GroupedCounts => _groupedCounts;
     public int WatchingCount => _watchingCount;
     public bool IsFetchingCounts => _isFetchingCounts;
@@ -77,6 +81,8 @@ public sealed class SonarController : ISonarController, IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
+        CheckRoleplayingStatus();
+
         if (!IsSharingLocation) return;
         if (!_sendTimer.IsRunning || _sendTimer.Elapsed < _sendInterval) return;
         _sendTimer.Restart();
@@ -154,6 +160,30 @@ public sealed class SonarController : ISonarController, IDisposable
             await StopSharing();
         else
             await StartSharing();
+    }
+
+    private void CheckRoleplayingStatus()
+    {
+        var localPlayer = Plugin.ObjectTable.LocalPlayer;
+        if (localPlayer is null) return;
+
+        var isRoleplaying = localPlayer.OnlineStatus.RowId == RoleplayingOnlineStatusId;
+        if (_wasRoleplaying == isRoleplaying) return;
+        _wasRoleplaying = isRoleplaying;
+
+        if (!Plugin.Configuration.LinkSonarSharingToRoleplayingStatus) return;
+
+        if (isRoleplaying && !IsSharingLocation)
+            Task.Run(StartSharing);
+        else if (!isRoleplaying && IsSharingLocation)
+            Task.Run(StopSharing);
+    }
+
+    public void ResetRoleplayingStatus()
+    {
+        // Invalidate cached state so the next CheckRoleplayingStatus tick on the
+        // framework thread re-evaluates and fires Start/Stop as needed.
+        _wasRoleplaying = null;
     }
 
     public Task SetActivity(string activity)

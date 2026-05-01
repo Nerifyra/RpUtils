@@ -147,6 +147,8 @@ internal class EncounterDetailTab
         var rolls = Plugin.Rolls.GetRollsForEncounter(encounterId)
             .Where(r => !r.IsInitiativeRoll)
             .ToList();
+        var initiativeRoll = Plugin.Rolls.GetRollsForEncounter(encounterId)
+            .FirstOrDefault(r => r.IsInitiativeRoll && r.IsActive && r.Participants.Any(p => p.IsPending));
         var columnCount = 3 + rolls.Count; // Icon, Name, Initiative, + one per roll
 
         var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH;
@@ -155,7 +157,7 @@ internal class EncounterDetailTab
 
         ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 20);
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Initiative", ImGuiTableColumnFlags.WidthFixed, 60);
+        ImGui.TableSetupColumn("Initiative", ImGuiTableColumnFlags.WidthFixed, 80);
 
         foreach (var roll in rolls)
         {
@@ -172,7 +174,7 @@ internal class EncounterDetailTab
         ImGui.TableHeader("Name");
 
         ImGui.TableSetColumnIndex(2);
-        ImGui.TableHeader("Initiative");
+        DrawInitiativeColumnHeader(initiativeRoll, isDm);
 
         for (var i = 0; i < rolls.Count; i++)
         {
@@ -279,6 +281,28 @@ internal class EncounterDetailTab
         if (ImGui.MenuItem("Close Roll"))
         {
             Plugin.Rolls.CloseRollRequest(roll.RollRequestId);
+        }
+    }
+
+    private static void DrawInitiativeColumnHeader(RollRequestState? initiativeRoll, bool isDm)
+    {
+        ImGui.TableHeader("Initiative");
+
+        if (!isDm || initiativeRoll == null) return;
+
+        var buttonSize = ImGui.GetFrameHeight();
+        ImGui.SameLine(ImGui.GetColumnWidth() - buttonSize);
+        if (ImGuiComponents.IconButton("##initiative_roll_menu", FontAwesomeIcon.EllipsisV))
+        {
+            ImGui.OpenPopup("InitiativeRollMenu");
+        }
+
+        using var popup = ImRaii.Popup("InitiativeRollMenu");
+        if (!popup.Success) return;
+
+        if (ImGui.MenuItem("End Roll"))
+        {
+            Plugin.Rolls.EndRollRequest(initiativeRoll.RollRequestId);
         }
     }
 

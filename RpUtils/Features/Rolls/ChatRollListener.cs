@@ -1,4 +1,4 @@
-using Dalamud.Game.Text;
+using Dalamud.Game.Chat;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using RpUtils.Features.Encounters.Models;
@@ -41,11 +41,11 @@ public sealed class ChatRollListener : IDisposable
 
     // ── Chat event handler (runs on main thread) ──────────────────────────
 
-    private void OnChatMessage(XivChatType type, int senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+    private void OnChatMessage(IHandleableChatMessage message)
     {
         try
         {
-            var parsed = TryParseRoll(sender, message);
+            var parsed = TryParseRoll(message.Sender, message.Message);
             if (parsed == null) return;
 
             var (rollValue, rollerName, isLocalPlayer) = parsed.Value;

@@ -21,7 +21,7 @@ internal class ShareLocationWindow : Window
         var selected = SonarActivity.DisplayName(sonar.CurrentActivity);
 
         using var combo = ImRaii.Combo("##RoleplayActivity", selected);
-        if (!combo) return;
+        if (!combo.Success) return;
 
         foreach (var activity in SonarActivity.All)
         {
@@ -41,22 +41,32 @@ internal class ShareLocationWindow : Window
     {
         var sonar = Plugin.Sonar;
         var isSharing = sonar.IsSharingLocation;
-        using var disabled = ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected);
-        if (ImGui.Checkbox("Share Roleplay Location", ref isSharing))
+        var tiedToRoleplaying = Plugin.Configuration.LinkSonarSharingToRoleplayingStatus;
+
+        using (ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected || tiedToRoleplaying))
         {
-            Task.Run(async () =>
+            if (ImGui.Checkbox("Share Roleplay Location", ref isSharing))
             {
-                if (isSharing)
-                    await sonar.StartSharing();
-                else
-                    await sonar.StopSharing();
-            });
+                Task.Run(async () =>
+                {
+                    if (isSharing)
+                        await sonar.StartSharing();
+                    else
+                        await sonar.StopSharing();
+                });
+            }
         }
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
         {
-            ImGui.SetTooltip("Enabling will anonymously share your current location, indicating you are roleplaying and open to walkups.");
+            if (tiedToRoleplaying)
+                ImGui.SetTooltip("Location sharing is currently linked to your in-game /roleplaying status.\n Location sharing can be unlinked in configuration.");
+            else
+                ImGui.SetTooltip("Enabling will anonymously share your current location, indicating you are roleplaying and open to walkups.");
         }
 
-        DrawActivitySelection();
+        using (ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected))
+        {
+            DrawActivitySelection();
+        }
     }
 }
