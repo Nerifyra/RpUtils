@@ -3,5 +3,9 @@ internal_name: RpUtilsPreview
 author: Nerifyra
 punchline: Supporting your RP needs.
 description: |-
+<<<<<<< HEAD
   A suite of features to support roleplay. /rputils
+=======
+  A suite (eventually) of features to support roleplay. /rputils
+>>>>>>> f3f0c7260aed2059e904cf058de52672d4a51d7b
 repo_url: https://github.com/Nerifyra/RpUtils
