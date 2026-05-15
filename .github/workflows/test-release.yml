@@ -31,9 +31,19 @@ jobs:
       - name: Build
         run: dotnet build -c Release RpUtils/RpUtils.csproj
 
+      - name: Build test repo manifest
+        env:
+          DOWNLOAD_URL: https://github.com/${{ github.repository }}/releases/download/test/latest.zip
+        run: |
+          jq "[ . + {DownloadLinkInstall: \"$DOWNLOAD_URL\", DownloadLinkUpdate: \"$DOWNLOAD_URL\", DownloadLinkTesting: \"$DOWNLOAD_URL\"} ]" \
+            RpUtils/bin/Release/RpUtilsPreview/RpUtilsPreview.json \
+            > RpUtils/bin/Release/RpUtilsPreview/RpUtilsTesting.json
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: test
           prerelease: true
-          files: RpUtils/bin/Release/RpUtilsPreview/latest.zip
+          files: |
+            RpUtils/bin/Release/RpUtilsPreview/latest.zip
+            RpUtils/bin/Release/RpUtilsPreview/RpUtilsTesting.json
