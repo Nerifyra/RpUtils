@@ -14,8 +14,6 @@
     "LoadPriority": 0,
     "Punchline": "Supporting your RP needs.",
     "AcceptsFeedback": true,
-    "DownloadLinkInstall": "https://github.com/Nerifyra/RpUtils/releases/download/v0.5.0/latest.zip",
-    "DownloadLinkTesting": "https://github.com/Nerifyra/RpUtils/releases/download/v0.5.0/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/Nerifyra/RpUtils/releases/download/v0.5.0/latest.zip"
+    "DownloadLinkInstall": "https://github.com/Nerifyra/RpUtils/releases/download/test/latest.zip"
   }
 ]
