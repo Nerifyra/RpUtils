@@ -2,8 +2,10 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using Pictomancy;
 using RpUtils.Features.Encounters;
 using RpUtils.Features.Lobbies;
+using RpUtils.Features.Markers;
 using RpUtils.Features.Rolls;
 using RpUtils.Features.Sonar;
 using RpUtils.Services;
@@ -26,6 +28,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
+    [PluginService] internal static IGameGui GameGui { get; private set; } = null!;
 
     internal static Configuration Configuration { get; private set; } = null!;
     internal static IConnectionStatus ConnectionStatus { get; private set; } = null!;
@@ -33,10 +36,12 @@ public sealed class Plugin : IDalamudPlugin
     internal static ILobbiesController Lobbies { get; private set; } = null!;
     internal static IEncountersController Encounters { get; private set; } = null!;
     internal static IRollsController Rolls { get; private set; } = null!;
+    internal static IMarkersController Markers {  get; private set; } = null!;
     internal static UIManager UI { get; private set; } = null!;
 
     private const string CommandName = "/rputils";
 
+    private readonly PctContext _pictomancy;
     private readonly HubConnectionService _hub;
     private readonly SonarService _sonarService;
     private readonly SonarController _sonarController;
@@ -46,6 +51,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly EncountersController _encountersController;
     private readonly RollsService _rollsService;
     private readonly RollsController _rollsController;
+    private readonly MarkersService _markersService;
+    private readonly MarkersController _markersController;
     private readonly ChatRollListener _chatRollListener;
 
     public Plugin()
@@ -54,6 +61,7 @@ public sealed class Plugin : IDalamudPlugin
 
         // Services
         _hub = new HubConnectionService();
+        _pictomancy = PctService.Initialize(PluginInterface);
         _sonarService = new SonarService(_hub);
         _sonarController = new SonarController(_sonarService);
         _lobbiesService = new LobbiesService(_hub);
@@ -62,6 +70,8 @@ public sealed class Plugin : IDalamudPlugin
         _encountersController = new EncountersController(_encountersService);
         _rollsService = new RollsService(_hub);
         _rollsController = new RollsController(_rollsService);
+        _markersService = new MarkersService(_hub);
+        _markersController = new MarkersController(_markersService);
         _chatRollListener = new ChatRollListener();
 
         ConnectionStatus = _hub;
@@ -69,6 +79,7 @@ public sealed class Plugin : IDalamudPlugin
         Lobbies = _lobbiesController;
         Encounters = _encountersController;
         Rolls = _rollsController;
+        Markers = _markersController;
 
         // UI
         UI = new UIManager();
@@ -97,10 +108,12 @@ public sealed class Plugin : IDalamudPlugin
         UI.Dispose();
         _chatRollListener.Dispose();
         _rollsController.Dispose();
+        _markersController.Dispose();
         _encountersController.Dispose();
         _lobbiesController.Dispose();
         _sonarController.Dispose();
         _hub.DisposeAsync().AsTask().Wait();
+        _pictomancy.Dispose();
     }
 
     private void OnCommand(string command, string args)

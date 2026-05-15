@@ -35,14 +35,21 @@
       <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8" />
+    <PackageReference Include="Pictomancy" Version="1.0.8" />
   </ItemGroup>
 
   
 
   <ItemGroup>
     <Content Include="RpUtilsPreview.yaml" />
+  </ItemGroup>
+
+  
+
+  <ItemGroup>
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
 
 </Project>

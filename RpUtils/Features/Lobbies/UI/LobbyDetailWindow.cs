@@ -5,6 +5,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using RpUtils.Features.Encounters.UI;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.Features.Markers.UI;
 using RpUtils.UI;
 
 namespace RpUtils.Features.Lobbies.UI;
@@ -14,6 +15,7 @@ internal class LobbyDetailWindow : Window
     private readonly string _lobbyId;
     private readonly ManageTab _manageTab;
     private readonly EncountersTab _encountersTab;
+    private readonly MarkersTab _markersTab;
     private string _renameBuffer = string.Empty;
     private bool _openRenamePopup;
 
@@ -22,6 +24,7 @@ internal class LobbyDetailWindow : Window
         _lobbyId = lobbyId;
         _manageTab = new ManageTab(lobbyId);
         _encountersTab = new EncountersTab(lobbyId);
+        _markersTab = new MarkersTab(lobbyId);
         Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
         SizeConstraints = new WindowSizeConstraints
         {
@@ -58,6 +61,7 @@ internal class LobbyDetailWindow : Window
 
         _manageTab.Draw(lobby);
         _encountersTab.Draw(lobby);
+        _markersTab.Draw(lobby);
     }
 
     private void DrawHeader(Lobby lobby)
