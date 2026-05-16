@@ -29,7 +29,7 @@ jobs:
           unzip /tmp/dalamud.zip -d $DALAMUD_HOME
 
       - name: Build
-        run: dotnet build -c Release RpUtils/RpUtils.csproj
+        run: dotnet build -c Release -p:PluginVersion=0.6.0.${{ github.run_number }} RpUtils/RpUtils.csproj
 
       - name: Build test repo manifest
         env:
