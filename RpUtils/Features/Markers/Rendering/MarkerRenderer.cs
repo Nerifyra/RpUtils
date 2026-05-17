@@ -27,8 +27,13 @@ public sealed class MarkerRenderer : IDisposable
 
     private const float StackPaddingPx = 4f;
 
+    // Label background pill — solid contrast-colored rect behind the text.
+    private const float LabelBgPaddingX = 4f;
+    private const float LabelBgPaddingY = 2f;
+    private const float LabelBgRounding = 3f;
+
+    // Hidden-indicator glyph stays white; the per-marker color only affects dot, ring, and label.
     private const uint FillColor = 0xFFFFFFFF;
-    private const uint BorderColor = 0xFF000000;
 
     private const float HiddenMarkerAlpha = 0.4f;
 
@@ -98,9 +103,12 @@ public sealed class MarkerRenderer : IDisposable
     {
         _alpha = marker.IsVisible ? 1f : HiddenMarkerAlpha;
 
-        DrawDot(marker.WorldPos);
-        DrawRing(marker.WorldPos, waveCenterAngle, RingRadius * marker.Size);
-        DrawOverlayStack(marker.WorldPos, marker.IconId, marker.Label, drawHiddenIndicator: !marker.IsVisible);
+        var color = NormalizeColor(marker.Color);
+        var borderColor = ComputeBorderColor(color);
+
+        DrawDot(marker.WorldPos, color, borderColor);
+        DrawRing(marker.WorldPos, waveCenterAngle, RingRadius * marker.Size, color, borderColor);
+        DrawOverlayStack(marker.WorldPos, marker.IconId, marker.Label, color, borderColor, drawHiddenIndicator: !marker.IsVisible);
     }
 
     private void DrawReticle(Marker placingMarker, float waveCenterAngle)
@@ -108,12 +116,16 @@ public sealed class MarkerRenderer : IDisposable
         _alpha = 1f;
 
         if (!Plugin.GameGui.ScreenToWorld(ImGui.GetMousePos(), out var worldPos)) return;
-        DrawDot(worldPos);
-        DrawRing(worldPos, waveCenterAngle, RingRadius * placingMarker.Size);
-        DrawOverlayStack(worldPos, placingMarker.IconId, placingMarker.Label, drawHiddenIndicator: false);
+
+        var color = NormalizeColor(placingMarker.Color);
+        var borderColor = ComputeBorderColor(color);
+
+        DrawDot(worldPos, color, borderColor);
+        DrawRing(worldPos, waveCenterAngle, RingRadius * placingMarker.Size, color, borderColor);
+        DrawOverlayStack(worldPos, placingMarker.IconId, placingMarker.Label, color, borderColor, drawHiddenIndicator: false);
     }
 
-    private void DrawOverlayStack(Vector3 foot, uint iconId, string label, bool drawHiddenIndicator)
+    private void DrawOverlayStack(Vector3 foot, uint iconId, string label, uint color, uint borderColor, bool drawHiddenIndicator)
     {
         var iconAnchor = foot + new Vector3(0, IconHeight, 0);
         if (!Plugin.GameGui.WorldToScreen(iconAnchor, out var iconScreen)) return;
@@ -123,34 +135,34 @@ public sealed class MarkerRenderer : IDisposable
 
         // Stack cursor moves upward as each element draws above the previous.
         var topY = iconScreen.Y - iconSize / 2f;
-        DrawLabel(iconScreen.X, ref topY, label);
+        DrawLabel(iconScreen.X, ref topY, label, color, borderColor);
         if (drawHiddenIndicator) DrawHiddenIndicator(iconScreen.X, ref topY);
     }
 
-    private void DrawDot(Vector3 pos)
+    private void DrawDot(Vector3 pos, uint color, uint borderColor)
     {
         var drawList = PctService.GetDrawList();
-        drawList.AddCircleFilled(pos, DotBorderRadius, Tint(BorderColor));
-        drawList.AddCircleFilled(pos, DotRadius, Tint(FillColor));
+        drawList.AddCircleFilled(pos, DotBorderRadius, Tint(borderColor));
+        drawList.AddCircleFilled(pos, DotRadius, Tint(color));
     }
 
-    private void DrawRing(Vector3 origin, float waveCenterAngle, float radius)
+    private void DrawRing(Vector3 origin, float waveCenterAngle, float radius, uint color, uint borderColor)
     {
-        DrawWaveArc(origin, waveCenterAngle, radius);
-        DrawWaveArc(origin, waveCenterAngle + MathF.PI, radius);
+        DrawWaveArc(origin, waveCenterAngle, radius, color, borderColor);
+        DrawWaveArc(origin, waveCenterAngle + MathF.PI, radius, color, borderColor);
     }
 
-    private void DrawWaveArc(Vector3 origin, float centerAngle, float radius)
+    private void DrawWaveArc(Vector3 origin, float centerAngle, float radius, uint color, uint borderColor)
     {
         var drawList = PctService.GetDrawList();
         drawList.AddArc(origin, radius,
             centerAngle - WaveArcHalfWidthRad,
             centerAngle + WaveArcHalfWidthRad,
-            Tint(BorderColor), RingSegments, WaveArcBorderThickness);
+            Tint(borderColor), RingSegments, WaveArcBorderThickness);
         drawList.AddArc(origin, radius,
             centerAngle - WaveArcHalfWidthRad,
             centerAngle + WaveArcHalfWidthRad,
-            Tint(FillColor), RingSegments, WaveArcThickness);
+            Tint(color), RingSegments, WaveArcThickness);
     }
 
     private void DrawIcon(Vector2 screenCenter, uint iconId, float size)
@@ -158,7 +170,7 @@ public sealed class MarkerRenderer : IDisposable
         IconDisplay.DrawOn(ImGui.GetBackgroundDrawList(), iconId, screenCenter, new Vector2(size, size), Tint(IconTint));
     }
 
-    private void DrawLabel(float xCenter, ref float topY, string label)
+    private void DrawLabel(float xCenter, ref float topY, string label, uint color, uint borderColor)
     {
         if (string.IsNullOrEmpty(label)) return;
 
@@ -168,8 +180,13 @@ public sealed class MarkerRenderer : IDisposable
         var textSize = ImGui.CalcTextSize(label) * scale;
 
         var pos = new Vector2(xCenter - textSize.X / 2f, topY - StackPaddingPx - textSize.Y);
-        ImGui.GetBackgroundDrawList().AddText(font, fontSize, pos, Tint(FillColor), label);
-        topY = pos.Y;
+        var drawList = ImGui.GetBackgroundDrawList();
+
+        var padding = new Vector2(LabelBgPaddingX, LabelBgPaddingY);
+        drawList.AddRectFilled(pos - padding, pos + textSize + padding, Tint(borderColor), LabelBgRounding);
+
+        drawList.AddText(font, fontSize, pos, Tint(color), label);
+        topY = pos.Y - padding.Y;
     }
 
     private static void DrawHiddenIndicator(float xCenter, ref float topY)
@@ -187,5 +204,22 @@ public sealed class MarkerRenderer : IDisposable
         var alphaByte = (color >> 24) & 0xFF;
         var newAlpha = (uint)(alphaByte * _alpha);
         return (color & 0x00FFFFFF) | (newAlpha << 24);
+    }
+
+    /// <summary>Force the alpha byte to opaque so a misconfigured / unmigrated marker can't render invisible.</summary>
+    private static uint NormalizeColor(uint color) => (color & 0x00FFFFFFu) | 0xFF000000u;
+
+    // Softened contrast pair — feels less harsh against colored fills than pure black/white.
+    private const uint BorderDark = 0xFF2A2A2Au;  // charcoal
+    private const uint BorderLight = 0xFFE6E6E6u; // off-white
+
+    /// <summary>Pick charcoal or off-white as the contrast border based on the fill color's perceived brightness (WCAG luminance).</summary>
+    private static uint ComputeBorderColor(uint fillColor)
+    {
+        var r = (fillColor & 0xFF) / 255f;
+        var g = ((fillColor >> 8) & 0xFF) / 255f;
+        var b = ((fillColor >> 16) & 0xFF) / 255f;
+        var luminance = 0.299f * r + 0.587f * g + 0.114f * b;
+        return luminance > 0.5f ? BorderDark : BorderLight;
     }
 }
