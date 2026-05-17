@@ -79,6 +79,16 @@ internal static class LobbyConfigTab
             config.RollResultsChatAlert, v => config.RollResultsChatAlert = v,
             config.RollResultsSoundAlert, v => config.RollResultsSoundAlert = v,
             config.RollResultsSoundId, v => config.RollResultsSoundId = v);
+
+        DrawAlertRow("Your turn",
+            config.YourTurnChatAlert, v => config.YourTurnChatAlert = v,
+            config.YourTurnSoundAlert, v => config.YourTurnSoundAlert = v,
+            config.YourTurnSoundId, v => config.YourTurnSoundId = v);
+
+        DrawAlertRow("You're next",
+            config.OnDeckChatAlert, v => config.OnDeckChatAlert = v,
+            config.OnDeckSoundAlert, v => config.OnDeckSoundAlert = v,
+            config.OnDeckSoundId, v => config.OnDeckSoundId = v);
     }
 
     private static void DrawAlertRow(

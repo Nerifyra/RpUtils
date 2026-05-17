@@ -14,12 +14,20 @@ public class Configuration : IPluginConfiguration
 
     // ── Roll Alerts ───────────────────────────────────────────────────
     public bool RollRequestedChatAlert { get; set; } = true;
-    public bool RollRequestedSoundAlert { get; set; } = false;
-    public uint RollRequestedSoundId { get; set; } = 1;
+    public bool RollRequestedSoundAlert { get; set; } = true;
+    public uint RollRequestedSoundId { get; set; } = 2;
 
     public bool RollResultsChatAlert { get; set; } = true;
-    public bool RollResultsSoundAlert { get; set; } = false;
-    public uint RollResultsSoundId { get; set; } = 1;
+    public bool RollResultsSoundAlert { get; set; } = true;
+    public uint RollResultsSoundId { get; set; } = 2;
+
+    public bool YourTurnChatAlert { get; set; } = true;
+    public bool YourTurnSoundAlert { get; set; } = true;
+    public uint YourTurnSoundId { get; set; } = 2;
+
+    public bool OnDeckChatAlert { get; set; } = true;
+    public bool OnDeckSoundAlert { get; set; } = true;
+    public uint OnDeckSoundId { get; set; } = 2;
 
     // ── Markers ───────────────────────────────────────────────────────
     public float MarkerIconSize { get; set; } = 28f;
