@@ -12,11 +12,14 @@ public class Configuration : IPluginConfiguration
     public bool ShowToolbar { get; set; } = true;
     public bool LinkSonarSharingToRoleplayingStatus { get; set; } = true;
 
-    // ── Chat Echo Alerts ──────────────────────────────────────────────
+    // ── Roll Alerts ───────────────────────────────────────────────────
     public bool RollRequestedChatAlert { get; set; } = true;
+    public bool RollRequestedSoundAlert { get; set; } = false;
+    public uint RollRequestedSoundId { get; set; } = 1;
+
     public bool RollResultsChatAlert { get; set; } = true;
-    public bool InitiativeRequestedChatAlert { get; set; } = true;
-    public bool InitiativeResultsChatAlert { get; set; } = true;
+    public bool RollResultsSoundAlert { get; set; } = false;
+    public uint RollResultsSoundId { get; set; } = 1;
 
     // ── Markers ───────────────────────────────────────────────────────
     public float MarkerIconSize { get; set; } = 28f;
