@@ -42,7 +42,11 @@ internal class EncountersTab
 
     private void DrawNoEncounters(Lobby lobby)
     {
-        if (!lobby.IsModeratorOrAbove) return;
+        if (!lobby.IsModeratorOrAbove)
+        {
+            ImGui.TextDisabled("No encounters yet.");
+            return;
+        }
 
         var buttonText = "Roll for initiative...";
         var buttonWidth = ImGui.CalcTextSize(buttonText).X + ImGui.GetStyle().FramePadding.X * 2;
