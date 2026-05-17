@@ -27,8 +27,56 @@ public sealed class EncountersController : IEncountersController, IDisposable
 
     private void OnEncounterStateUpdated(EncounterState state)
     {
+        _encounters.TryGetValue(state.EncounterId, out var previous);
+
         _encounters[state.EncounterId] = state;
         OnStateChanged?.Invoke();
+
+        if (LocalPlayerTurnJustStarted(previous, state))
+            EncounterAlerts.AlertYourTurn(state);
+        else if (LocalPlayerOnDeckJustStarted(previous, state))
+            EncounterAlerts.AlertOnDeck(state);
+    }
+
+    private static bool LocalPlayerTurnJustStarted(EncounterState? previous, EncounterState current)
+    {
+        // Skip the first update we see for an encounter — we can't distinguish "turn just advanced
+        // to you" from "encounter was just created / you just joined and it happens to be your turn".
+        // Real turn transitions always have a previous state to diff against.
+        if (previous == null) return false;
+
+        if (!Plugin.Lobbies.Lobbies.TryGetValue(current.LobbyId, out var lobby)) return false;
+
+        var nowCurrent = current.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        if (!nowCurrent) return false;
+
+        var wasCurrent = previous.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        return !wasCurrent;
+    }
+
+    private static bool LocalPlayerOnDeckJustStarted(EncounterState? previous, EncounterState current)
+    {
+        if (previous == null) return false;
+        if (!Plugin.Lobbies.Lobbies.TryGetValue(current.LobbyId, out var lobby)) return false;
+
+        var nowOnDeck = IsLocalPlayerOnDeck(current, lobby.PlayerId);
+        if (!nowOnDeck) return false;
+
+        var wasOnDeck = IsLocalPlayerOnDeck(previous, lobby.PlayerId);
+        return !wasOnDeck;
+    }
+
+    private static bool IsLocalPlayerOnDeck(EncounterState state, string localPlayerId)
+    {
+        // Participants are stored in turn order, so "on deck" is the slot after the current one
+        // (wrapping). Need at least two for "next" to mean something other than "current".
+        if (state.Participants.Count < 2) return false;
+
+        var currentIndex = state.Participants.FindIndex(p => p.IsCurrent);
+        if (currentIndex < 0) return false;
+
+        var nextIndex = (currentIndex + 1) % state.Participants.Count;
+        return state.Participants[nextIndex].PlayerId == localPlayerId;
     }
 
     private void OnEncounterEnded(string encounterId)

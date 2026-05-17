@@ -27,13 +27,27 @@ public sealed class RollsController : IRollsController, IDisposable
 
     private void OnRollRequestStateUpdated(RollRequestState state)
     {
-        _rollRequests.TryGetValue(state.RollRequestId, out var previous);
-        var isNew = previous == null;
+        var isNew = !_rollRequests.TryGetValue(state.RollRequestId, out var previous);
 
         _rollRequests[state.RollRequestId] = state;
         OnStateChanged?.Invoke();
 
-        RollChatEcho.OnRollUpdate(state, isNew, previous);
+        if (isNew)
+        {
+            RollAlerts.AlertRollRequested(state);
+            return;
+        }
+
+        if (IsJustCompleted(previous!, state))
+            RollAlerts.AlertRollCompleted(state);
+    }
+
+    private static bool IsJustCompleted(RollRequestState previous, RollRequestState current)
+    {
+        var wasAllResolved = previous.Participants.All(p => !p.IsPending);
+        var isAllResolved = current.Participants.All(p => !p.IsPending);
+        var justEnded = previous.IsActive && !current.IsActive;
+        return (isAllResolved && !wasAllResolved) || justEnded;
     }
 
     private void OnRollRequestClosedHandler(string rollRequestId)

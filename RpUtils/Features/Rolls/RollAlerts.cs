@@ -1,4 +1,5 @@
 using Dalamud.Game.Text.SeStringHandling;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using RpUtils.Features.Rolls.Models;
 using RpUtils.Services;
 using RpUtils.UI;
@@ -7,67 +8,59 @@ using System.Linq;
 
 namespace RpUtils.Features.Rolls;
 
-/// <summary>
-/// Sends roll-related echo messages to local game chat.
-/// Called by RollsController when roll state changes are received.
-/// </summary>
-internal static class RollChatEcho
+internal static class RollAlerts
 {
-    public static void OnRollUpdate(RollRequestState state, bool isNew, RollRequestState? previous)
+    // ── Roll requested ────────────────────────────────────────────────
+
+    public static void AlertRollRequested(RollRequestState state)
     {
-        if (isNew)
-        {
-            EchoRollRequested(state);
-            return;
-        }
+        // Only alert players being asked to roll — other lobby members (DM, spectators) don't need it.
+        if (!IsLocalPlayerParticipant(state)) return;
 
-        if (previous == null) return;
-
-        var wasAllResolved = previous.Participants.All(p => !p.IsPending);
-        var isAllResolved = state.Participants.All(p => !p.IsPending);
-        var justEnded = previous.IsActive && !state.IsActive;
-
-        if ((isAllResolved && !wasAllResolved) || justEnded)
-            EchoRollCompleted(state);
+        var config = Plugin.Configuration;
+        if (config.RollRequestedChatAlert) EchoRollRequested(state);
+        if (config.RollRequestedSoundAlert) PlaySoundRollRequested();
     }
-
-    // ── Request messages ──────────────────────────────────────────────
 
     private static void EchoRollRequested(RollRequestState state)
     {
-        var config = Plugin.Configuration;
         var dmName = ResolveDmDisplayName(state);
 
         if (state.IsInitiativeRoll)
         {
-            if (!config.InitiativeRequestedChatAlert) return;
-            if (!IsLocalPlayerParticipant(state)) return;
             ChatEcho.Send($"Roll for initiative! Please roll in a channel visible to {dmName}.");
             return;
         }
 
-        if (!config.RollRequestedChatAlert) return;
         var participantNames = string.Join(", ", state.Participants.Select(p => p.DisplayName));
         var dcText = state.DC.HasValue ? $"DC {state.DC.Value} " : "";
         ChatEcho.Send($"{dmName} has requested a {dcText}roll from {participantNames}. Please roll in a channel visible to {dmName}.");
     }
 
-    // ── Completion messages ───────────────────────────────────────────
-
-    private static void EchoRollCompleted(RollRequestState state)
+    private static void PlaySoundRollRequested()
     {
-        var config = Plugin.Configuration;
+        UIGlobals.PlayChatSoundEffect(Plugin.Configuration.RollRequestedSoundId);
+    }
+
+    // ── Roll completed ────────────────────────────────────────────────
+
+    public static void AlertRollCompleted(RollRequestState state)
+    {
         var resolved = state.Participants.Where(p => !p.IsPending).ToList();
         if (resolved.Count == 0) return;
 
+        var config = Plugin.Configuration;
+        if (config.RollResultsChatAlert) EchoRollCompleted(state, resolved);
+        if (config.RollResultsSoundAlert) PlaySoundRollCompleted();
+    }
+
+    private static void EchoRollCompleted(RollRequestState state, List<RollParticipant> resolved)
+    {
         if (state.IsInitiativeRoll)
         {
-            if (config.InitiativeResultsChatAlert)
-                EchoInitiativeCompleted(resolved);
+            EchoInitiativeCompleted(resolved);
             return;
         }
-
-        if (!config.RollResultsChatAlert) return;
 
         var rollLabel = string.IsNullOrWhiteSpace(state.Name) ? "Roll" : state.Name;
 
@@ -76,6 +69,13 @@ internal static class RollChatEcho
         else
             ChatEcho.Send($"{rollLabel} completed. {FormatResults(resolved)}");
     }
+
+    private static void PlaySoundRollCompleted()
+    {
+        UIGlobals.PlayChatSoundEffect(Plugin.Configuration.RollResultsSoundId);
+    }
+
+    // ── Echo formatting ───────────────────────────────────────────────
 
     private static void EchoDcRollCompleted(string rollLabel, int dc, List<RollParticipant> resolved)
     {
@@ -121,8 +121,6 @@ internal static class RollChatEcho
         ChatEcho.Send(body.Build());
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────
-
     private static void AppendColoredResults(SeStringBuilder body, ushort color, List<RollParticipant> participants)
     {
         body.AddUiForeground(color);
@@ -134,6 +132,8 @@ internal static class RollChatEcho
     {
         return string.Join(", ", resolved.Select(p => $"{p.DisplayName}: {p.Result}"));
     }
+
+    // ── Lobby lookups ─────────────────────────────────────────────────
 
     private static bool IsLocalPlayerParticipant(RollRequestState state)
     {

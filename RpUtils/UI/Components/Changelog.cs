@@ -68,10 +68,13 @@ public sealed class Changelog
         builder.NextVersion("0.5.1")
             .Important("Added option to link sonar location sharing to /roleplaying.")
                 .Detail("Linking roleplay sonar location sharing can be toggled on and off in configuration menu.")
+            .Minor("Sonar button now toggles /roleplaying when linked.")
             .Minor("Fixes around multiple simulatenous rolls resulting in subsequent rolls not tracking.")
                 .Detail("The roll collection is still a bit fragile while testing. Please report any similar issues!")
             .Minor("Requested initiative rolls can now be ended early.")
             .Minor("Fix for duplicated NPCs when editing encounters.")
+            .Minor("Updated configuration for alerts.")
+                .Detail("Alerts now include both a chat and audio component that can be configured independently.")
             .Minor("Various visual fixes.");
     }
 

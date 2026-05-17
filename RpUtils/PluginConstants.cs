@@ -21,7 +21,7 @@ public static class PluginConstants
     public const string HubAddress = "/rpUtilsHub";
 
     #if DEBUG
-        public const string ServerAddress = "http://localhost:8080";
+        public const string ServerAddress = "http://rputils.catwitch.dev:8080";
     #else
         public const string ServerAddress = "http://rputils.catwitch.dev:8080";
     #endif
