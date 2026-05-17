@@ -99,7 +99,7 @@ public sealed class MarkerRenderer : IDisposable
         _alpha = marker.IsVisible ? 1f : HiddenMarkerAlpha;
 
         DrawDot(marker.WorldPos);
-        DrawRing(marker.WorldPos, waveCenterAngle);
+        DrawRing(marker.WorldPos, waveCenterAngle, RingRadius * marker.Size);
         DrawOverlayStack(marker.WorldPos, marker.IconId, marker.Label, drawHiddenIndicator: !marker.IsVisible);
     }
 
@@ -109,7 +109,7 @@ public sealed class MarkerRenderer : IDisposable
 
         if (!Plugin.GameGui.ScreenToWorld(ImGui.GetMousePos(), out var worldPos)) return;
         DrawDot(worldPos);
-        DrawRing(worldPos, waveCenterAngle);
+        DrawRing(worldPos, waveCenterAngle, RingRadius * placingMarker.Size);
         DrawOverlayStack(worldPos, placingMarker.IconId, placingMarker.Label, drawHiddenIndicator: false);
     }
 
@@ -134,20 +134,20 @@ public sealed class MarkerRenderer : IDisposable
         drawList.AddCircleFilled(pos, DotRadius, Tint(FillColor));
     }
 
-    private void DrawRing(Vector3 origin, float waveCenterAngle)
+    private void DrawRing(Vector3 origin, float waveCenterAngle, float radius)
     {
-        DrawWaveArc(origin, waveCenterAngle);
-        DrawWaveArc(origin, waveCenterAngle + MathF.PI);
+        DrawWaveArc(origin, waveCenterAngle, radius);
+        DrawWaveArc(origin, waveCenterAngle + MathF.PI, radius);
     }
 
-    private void DrawWaveArc(Vector3 origin, float centerAngle)
+    private void DrawWaveArc(Vector3 origin, float centerAngle, float radius)
     {
         var drawList = PctService.GetDrawList();
-        drawList.AddArc(origin, RingRadius,
+        drawList.AddArc(origin, radius,
             centerAngle - WaveArcHalfWidthRad,
             centerAngle + WaveArcHalfWidthRad,
             Tint(BorderColor), RingSegments, WaveArcBorderThickness);
-        drawList.AddArc(origin, RingRadius,
+        drawList.AddArc(origin, radius,
             centerAngle - WaveArcHalfWidthRad,
             centerAngle + WaveArcHalfWidthRad,
             Tint(FillColor), RingSegments, WaveArcThickness);

@@ -21,6 +21,7 @@ internal sealed class MarkerConfigPopup
     private uint _iconId;
     private string _label = string.Empty;
     private bool _isVisible;
+    private float _size;
     private bool _openPopup;
 
     public MarkerConfigPopup()
@@ -34,6 +35,7 @@ internal sealed class MarkerConfigPopup
         _iconId = marker.IconId;
         _label = marker.Label;
         _isVisible = marker.IsVisible;
+        _size = marker.Size;
         _openPopup = true;
     }
 
@@ -89,6 +91,10 @@ internal sealed class MarkerConfigPopup
         ImGui.Spacing();
         ImGui.SetNextItemWidth(-1);
         ImGui.InputTextWithHint("##label", "Label", ref _label, 64);
+
+        ImGui.Spacing();
+        ImGui.SetNextItemWidth(-1);
+        ImGui.SliderFloat("##size", ref _size, 0.5f, 5f, "Size %.2fx");
     }
 
     private void Confirm()
@@ -98,6 +104,7 @@ internal sealed class MarkerConfigPopup
             _target.IconId = _iconId;
             _target.Label = _label;
             _target.IsVisible = _isVisible;
+            _target.Size = _size;
             _ = Plugin.Markers.UpdateMarker(_target);
         }
         Dismiss();
