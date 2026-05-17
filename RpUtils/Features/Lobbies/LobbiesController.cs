@@ -199,7 +199,7 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         if (localPlayer is null) return "Unknown";
 
         var name = localPlayer.Name.ToString();
-        var world = Plugin.PlayerState.CurrentWorld.Value.Name.ToString();
+        var world = Plugin.PlayerState.HomeWorld.Value.Name.ToString();
         return $"{name}@{world}";
     }
 
