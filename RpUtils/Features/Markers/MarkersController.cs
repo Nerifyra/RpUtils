@@ -64,7 +64,6 @@ public sealed class MarkersController : IMarkersController, IDisposable
             Id = Guid.NewGuid(),
             LobbyId = lobbyId,
             IconId = iconId,
-            IsVisible = true,
         };
         var success = await _service.UpdateMarker(marker);
         if (!success) ShowError("Failed to add marker.");
