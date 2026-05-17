@@ -28,7 +28,10 @@ public sealed class MarkersController : IMarkersController, IDisposable
 
         _service.OnMarkerUpdated += OnMarkerUpdated;
         _service.OnMarkerRemoved += OnMarkerRemoved;
+        Plugin.Lobbies.OnLobbyEntered += OnLobbyEntered;
     }
+
+    private void OnLobbyEntered(string lobbyId) => _ = RefreshMarkers(lobbyId);
 
     private void OnMarkerUpdated(Marker marker)
     {
@@ -106,6 +109,7 @@ public sealed class MarkersController : IMarkersController, IDisposable
     {
         _service.OnMarkerUpdated -= OnMarkerUpdated;
         _service.OnMarkerRemoved -= OnMarkerRemoved;
+        Plugin.Lobbies.OnLobbyEntered -= OnLobbyEntered;
         _renderer.Dispose();
         _placement.Dispose();
     }
