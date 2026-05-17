@@ -28,15 +28,11 @@ internal class MarkersTab
         using var tab = ImRaii.TabItem($"Markers##{_lobbyId}");
         if (!tab.Success) return;
 
-        if (!lobby.IsModeratorOrAbove)
-        {
-            ImGui.TextDisabled("Only lobby moderators can manage markers.");
-            return;
-        }
+        var canManage = lobby.IsModeratorOrAbove;
 
-        DrawMarkersControls();
-        DrawMarkersList();
-        _iconPickerPopup.Draw();
+        if (canManage) DrawMarkersControls();
+        DrawMarkersList(canManage);
+        if (canManage) _iconPickerPopup.Draw();
     }
 
     private void DrawMarkersControls()
@@ -50,10 +46,10 @@ internal class MarkersTab
         TooltipOnHover("Add marker");
     }
 
-    private void DrawMarkersList()
+    private void DrawMarkersList(bool canManage)
     {
         var markers = Plugin.Markers.Markers.Values
-            .Where(m => m.LobbyId == _lobbyId)
+            .Where(m => m.LobbyId == _lobbyId && (canManage || m.IsVisible))
             .ToList();
 
         if (markers.Count == 0)
@@ -66,7 +62,26 @@ internal class MarkersTab
         if (!child.Success) return;
 
         foreach (var marker in markers)
-            DrawMarkerRow(marker);
+        {
+            if (canManage) DrawMarkerRow(marker);
+            else DrawReadOnlyMarkerRow(marker);
+        }
+    }
+
+    private static void DrawReadOnlyMarkerRow(Marker marker)
+    {
+        using var rowId = ImRaii.PushId(marker.Id.ToString());
+
+        IconDisplay.Draw(marker.IconId, RowIconSize);
+
+        ImGui.SameLine();
+        // Vertically center label text against the icon.
+        var textOffsetY = (RowIconSize.Y - ImGui.GetTextLineHeight()) * 0.5f;
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + textOffsetY);
+        if (string.IsNullOrEmpty(marker.Label))
+            ImGui.TextDisabled("(unnamed)");
+        else
+            ImGui.TextUnformatted(marker.Label);
     }
 
     private void DrawMarkerRow(Marker marker)
