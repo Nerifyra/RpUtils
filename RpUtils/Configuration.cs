@@ -18,6 +18,10 @@ public class Configuration : IPluginConfiguration
     public bool InitiativeRequestedChatAlert { get; set; } = true;
     public bool InitiativeResultsChatAlert { get; set; } = true;
 
+    // ── Markers ───────────────────────────────────────────────────────
+    public float MarkerIconSize { get; set; } = 28f;
+    public float MarkerLabelScale { get; set; } = 1f;
+
     // ── Changelog ─────────────────────────────────────────────────────
     public string LastSeenChangelogVersion { get; set; } = "";
     public bool ShowChangelogOnUpdate { get; set; } = true;

@@ -23,10 +23,9 @@ public sealed class MarkerRenderer : IDisposable
     private const float OrbitSpeedRadPerSec = 1.4f;
 
     private const float IconHeight = 0.75f;
-    private const float LabelOffsetAboveIcon = 0.3f;
-    private const float HiddenIndicatorOffsetAboveLabel = 0.3f;
-    private static readonly Vector2 IconSize = new(28, 28);
     private const uint IconTint = 0xFFFFFFFF;
+
+    private const float StackPaddingPx = 4f;
 
     private const uint FillColor = 0xFFFFFFFF;
     private const uint BorderColor = 0xFF000000;
@@ -101,10 +100,7 @@ public sealed class MarkerRenderer : IDisposable
 
         DrawDot(marker.WorldPos);
         DrawRing(marker.WorldPos, waveCenterAngle);
-        DrawIcon(marker.WorldPos, marker.IconId);
-        DrawLabel(marker.WorldPos, marker.Label);
-
-        if (!marker.IsVisible) DrawHiddenIndicator(marker.WorldPos);
+        DrawOverlayStack(marker.WorldPos, marker.IconId, marker.Label, drawHiddenIndicator: !marker.IsVisible);
     }
 
     private void DrawReticle(Marker placingMarker, float waveCenterAngle)
@@ -114,8 +110,21 @@ public sealed class MarkerRenderer : IDisposable
         if (!Plugin.GameGui.ScreenToWorld(ImGui.GetMousePos(), out var worldPos)) return;
         DrawDot(worldPos);
         DrawRing(worldPos, waveCenterAngle);
-        DrawIcon(worldPos, placingMarker.IconId);
-        DrawLabel(worldPos, placingMarker.Label);
+        DrawOverlayStack(worldPos, placingMarker.IconId, placingMarker.Label, drawHiddenIndicator: false);
+    }
+
+    private void DrawOverlayStack(Vector3 foot, uint iconId, string label, bool drawHiddenIndicator)
+    {
+        var iconAnchor = foot + new Vector3(0, IconHeight, 0);
+        if (!Plugin.GameGui.WorldToScreen(iconAnchor, out var iconScreen)) return;
+
+        var iconSize = Plugin.Configuration.MarkerIconSize;
+        DrawIcon(iconScreen, iconId, iconSize);
+
+        // Stack cursor moves upward as each element draws above the previous.
+        var topY = iconScreen.Y - iconSize / 2f;
+        DrawLabel(iconScreen.X, ref topY, label);
+        if (drawHiddenIndicator) DrawHiddenIndicator(iconScreen.X, ref topY);
     }
 
     private void DrawDot(Vector3 pos)
@@ -144,31 +153,33 @@ public sealed class MarkerRenderer : IDisposable
             Tint(FillColor), RingSegments, WaveArcThickness);
     }
 
-    private void DrawIcon(Vector3 foot, uint iconId)
+    private void DrawIcon(Vector2 screenCenter, uint iconId, float size)
     {
-        var iconWorldPos = foot + new Vector3(0, IconHeight, 0);
-        if (!Plugin.GameGui.WorldToScreen(iconWorldPos, out var screenPos)) return;
-        IconDisplay.DrawOn(ImGui.GetBackgroundDrawList(), iconId, screenPos, IconSize, Tint(IconTint));
+        IconDisplay.DrawOn(ImGui.GetBackgroundDrawList(), iconId, screenCenter, new Vector2(size, size), Tint(IconTint));
     }
 
-    private void DrawLabel(Vector3 foot, string label)
+    private void DrawLabel(float xCenter, ref float topY, string label)
     {
         if (string.IsNullOrEmpty(label)) return;
 
-        var drawList = PctService.GetDrawList();
-        var labelPos = foot + new Vector3(0, IconHeight + LabelOffsetAboveIcon, 0);
-        drawList.AddText(labelPos, Tint(FillColor), label);
+        var scale = Plugin.Configuration.MarkerLabelScale;
+        var font = ImGui.GetFont();
+        var fontSize = font.FontSize * scale;
+        var textSize = ImGui.CalcTextSize(label) * scale;
+
+        var pos = new Vector2(xCenter - textSize.X / 2f, topY - StackPaddingPx - textSize.Y);
+        ImGui.GetBackgroundDrawList().AddText(font, fontSize, pos, Tint(FillColor), label);
+        topY = pos.Y;
     }
 
-    private void DrawHiddenIndicator(Vector3 foot)
+    private static void DrawHiddenIndicator(float xCenter, ref float topY)
     {
-        var worldPos = foot + new Vector3(0, IconHeight + LabelOffsetAboveIcon + HiddenIndicatorOffsetAboveLabel, 0);
-        if (!Plugin.GameGui.WorldToScreen(worldPos, out var screenPos)) return;
-
         using var font = ImRaii.PushFont(UiBuilder.IconFont);
         var glyph = FontAwesomeIcon.EyeSlash.ToIconString();
         var glyphSize = ImGui.CalcTextSize(glyph);
-        ImGui.GetBackgroundDrawList().AddText(screenPos - glyphSize / 2, FillColor, glyph);
+        var pos = new Vector2(xCenter - glyphSize.X / 2f, topY - StackPaddingPx - glyphSize.Y);
+        ImGui.GetBackgroundDrawList().AddText(pos, FillColor, glyph);
+        topY = pos.Y;
     }
 
     private uint Tint(uint color)
