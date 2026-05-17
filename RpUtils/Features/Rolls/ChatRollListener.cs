@@ -89,7 +89,7 @@ public sealed class ChatRollListener : IDisposable
         if (localPlayer == null) return null;
 
         var localName = localPlayer.Name.TextValue;
-        var localWorld = Plugin.PlayerState.CurrentWorld.Value.Name.ToString();
+        var localWorld = Plugin.PlayerState.HomeWorld.Value.Name.ToString();
         var localCharacterName = $"{localName}@{localWorld}";
 
         // Determine who rolled — own rolls use local player, others use PlayerPayload

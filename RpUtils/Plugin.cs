@@ -61,25 +61,31 @@ public sealed class Plugin : IDalamudPlugin
 
         // Services
         _hub = new HubConnectionService();
+        ConnectionStatus = _hub;
+
         _pictomancy = PctService.Initialize(PluginInterface);
+
         _sonarService = new SonarService(_hub);
         _sonarController = new SonarController(_sonarService);
+        Sonar = _sonarController;
+
         _lobbiesService = new LobbiesService(_hub);
         _lobbiesController = new LobbiesController(_lobbiesService);
+        Lobbies = _lobbiesController;
+
         _encountersService = new EncountersService(_hub);
         _encountersController = new EncountersController(_encountersService);
+        Encounters = _encountersController;
+
         _rollsService = new RollsService(_hub);
         _rollsController = new RollsController(_rollsService);
+        Rolls = _rollsController;
+
         _markersService = new MarkersService(_hub);
         _markersController = new MarkersController(_markersService);
-        _chatRollListener = new ChatRollListener();
-
-        ConnectionStatus = _hub;
-        Sonar = _sonarController;
-        Lobbies = _lobbiesController;
-        Encounters = _encountersController;
-        Rolls = _rollsController;
         Markers = _markersController;
+
+        _chatRollListener = new ChatRollListener();
 
         // UI
         UI = new UIManager();
