@@ -1,11 +1,7 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
-using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using RpUtils.Features.Lobbies.Models;
-using RpUtils.UI;
-using System.Numerics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RpUtils.Features.Lobbies.UI;
@@ -13,10 +9,10 @@ namespace RpUtils.Features.Lobbies.UI;
 internal class LobbiesWindow : Window
 {
     private string _joinCode = string.Empty;
+    private readonly LobbyDetailView _detailView = new();
 
     public LobbiesWindow() : base("Lobbies")
     {
-        //Flags = Theme.CompactWindowFlags;
         IsOpen = false;
     }
 
@@ -29,17 +25,37 @@ internal class LobbiesWindow : Window
     {
         using var disabled = ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected);
 
+        if (Plugin.Lobbies.IsLoading)
+        {
+            ImGui.Text("Loading...");
+            return;
+        }
+
+        var lobby = Plugin.Lobbies.Lobbies.Values.FirstOrDefault();
+        if (lobby is null)
+        {
+            DrawEntry();
+            return;
+        }
+
+        _detailView.Draw(lobby);
+    }
+
+    private void DrawEntry()
+    {
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + ImGui.GetContentRegionAvail().Y / 4f);
+
         DrawCreateButton();
         DrawJoinSection();
-
-        ImGui.Separator();
-
-        DrawLobbyList();
     }
 
     private void DrawCreateButton()
     {
-        if (ImGui.Button("Create Lobby"))
+        const string label = "Create Lobby";
+        var width = ImGui.CalcTextSize(label).X + ImGui.GetStyle().FramePadding.X * 2;
+        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - width) * 0.5f);
+
+        if (ImGui.Button(label))
         {
             Plugin.Lobbies.CreateLobby();
         }
@@ -47,7 +63,12 @@ internal class LobbiesWindow : Window
 
     private void DrawJoinSection()
     {
-        ImGui.SetNextItemWidth(120);
+        var style = ImGui.GetStyle();
+        const float inputWidth = 120f;
+        var width = inputWidth + style.ItemSpacing.X + ImGui.CalcTextSize("Join").X + style.FramePadding.X * 2;
+        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - width) * 0.5f);
+
+        ImGui.SetNextItemWidth(inputWidth);
         ImGui.InputTextWithHint("##JoinCode", "Enter code...", ref _joinCode, 6);
         ImGui.SameLine();
         using var joinDisabled = ImRaii.Disabled(string.IsNullOrWhiteSpace(_joinCode));
@@ -56,54 +77,6 @@ internal class LobbiesWindow : Window
             var code = _joinCode.Trim();
             _joinCode = string.Empty;
             Plugin.Lobbies.JoinLobby(code);
-        }
-    }
-
-    private void DrawLobbyList()
-    {
-        var lobbies = Plugin.Lobbies;
-
-        if (lobbies.IsLoading && lobbies.Lobbies.Count == 0)
-        {
-            ImGui.Text("Loading...");
-            return;
-        }
-
-        if (lobbies.Lobbies.Count == 0)
-        {
-            ImGui.Text("No lobbies. Create or join one!");
-            return;
-        }
-
-        foreach (var lobby in lobbies.Lobbies.Values)
-        {
-            DrawLobbyItem(lobby);
-        }
-    }
-
-    private void DrawLobbyItem(Lobby lobby)
-    {
-        var label = $"{lobby.State.Name} ({lobby.State.Members.Count})";
-        var rowHeight = ImGui.GetFrameHeight();
-        if (ImGui.Selectable($"{label}##{lobby.LobbyId}", false, ImGuiSelectableFlags.None, new Vector2(0, rowHeight)))
-        {
-            Plugin.UI.OpenLobbyDetail(lobby.LobbyId);
-        }
-        ImGui.SetItemAllowOverlap();
-
-        ImGui.SameLine(ImGui.GetContentRegionAvail().X - ImGui.GetFrameHeight());
-        var tooltip = lobby.IsOwner ? "Close Lobby" : "Leave Lobby";
-        if (ImGuiComponents.IconButton($"##{lobby.LobbyId}_exit", FontAwesomeIcon.Times))
-        {
-            if (lobby.IsOwner)
-                Plugin.Lobbies.CloseLobby(lobby.LobbyId);
-            else
-                Plugin.Lobbies.LeaveLobby(lobby.LobbyId);
-        }
-
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(tooltip);
         }
     }
 }

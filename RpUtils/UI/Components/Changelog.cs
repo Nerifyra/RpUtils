@@ -32,9 +32,9 @@ public sealed class Changelog
     /// </summary>
     public void Draw()
     {
-        foreach (var version in Versions)
+        for (var i = 0; i < Versions.Count; i++)
         {
-            DrawVersion(version);
+            DrawVersion(Versions[i], isLatest: i == 0);
         }
     }
 
@@ -110,10 +110,11 @@ public sealed class Changelog
 
     // ── Rendering ────────────────────────────────────────────────────────
 
-    private static void DrawVersion(ChangeVersion version)
+    private static void DrawVersion(ChangeVersion version, bool isLatest)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Theme.GoldColor);
-        var isOpen = ImGui.CollapsingHeader(version.Version, ImGuiTreeNodeFlags.DefaultOpen);
+        var flags = isLatest ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
+        var isOpen = ImGui.CollapsingHeader(version.Version, flags);
         ImGui.PopStyleColor();
 
         if (!isOpen) return;

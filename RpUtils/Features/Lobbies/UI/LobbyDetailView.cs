@@ -2,7 +2,6 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Interface.Windowing;
 using RpUtils.Features.Encounters.UI;
 using RpUtils.Features.Lobbies.Models;
 using RpUtils.Features.Markers.UI;
@@ -10,39 +9,24 @@ using RpUtils.UI;
 
 namespace RpUtils.Features.Lobbies.UI;
 
-internal class LobbyDetailWindow : Window
+internal class LobbyDetailView
 {
-    private readonly string _lobbyId;
-    private readonly ManageTab _manageTab;
-    private readonly EncountersTab _encountersTab;
-    private readonly MarkersTab _markersTab;
+    private string _lobbyId = string.Empty;
+    private ManageTab _manageTab = null!;
+    private EncountersTab _encountersTab = null!;
+    private MarkersTab _markersTab = null!;
     private string _renameBuffer = string.Empty;
     private bool _openRenamePopup;
 
-    public LobbyDetailWindow(string lobbyId) : base($"Lobby##{lobbyId}")
+    public void Draw(Lobby lobby)
     {
-        _lobbyId = lobbyId;
-        _manageTab = new ManageTab(lobbyId);
-        _encountersTab = new EncountersTab(lobbyId);
-        _markersTab = new MarkersTab(lobbyId);
-        Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-        SizeConstraints = new WindowSizeConstraints
+        if (_lobbyId != lobby.LobbyId)
         {
-            MinimumSize = new System.Numerics.Vector2(300, 300),
-        };
-        IsOpen = true;
-    }
-
-    public override void Draw()
-    {
-        if (!Plugin.Lobbies.Lobbies.TryGetValue(_lobbyId, out var lobby))
-        {
-            ImGui.Text("Loading lobby...");
-            return;
+            _lobbyId = lobby.LobbyId;
+            _manageTab = new ManageTab(lobby.LobbyId);
+            _encountersTab = new EncountersTab(lobby.LobbyId);
+            _markersTab = new MarkersTab(lobby.LobbyId);
         }
-
-        // Update title to show lobby name
-        WindowName = $"{lobby.State.Name}##{_lobbyId}";
 
         DrawHeader(lobby);
 
@@ -100,40 +84,38 @@ internal class LobbyDetailWindow : Window
     private void DrawContextMenu(Lobby lobby)
     {
         using var popup = ImRaii.Popup($"LobbyContextMenu##{_lobbyId}");
-        if (popup.Success)
+        if (!popup.Success) return;
+
+        if (ImGui.MenuItem("Copy Join Code"))
         {
-            if (ImGui.MenuItem("Copy Join Code"))
-            {
-                ImGui.SetClipboardText(lobby.State.JoinCode);
-            }
-
-            if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Refresh Join Code"))
-            {
-                Plugin.Lobbies.RegenerateJoinCode(_lobbyId);
-            }
-
-            if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Rename Lobby"))
-            {
-                _renameBuffer = lobby.State.Name;
-                _openRenamePopup = true;
-            }
-
-            if (lobby.IsOwner)
-            {
-                if (ImGui.MenuItem("Close Lobby"))
-                {
-                    Plugin.Lobbies.CloseLobby(_lobbyId);
-                }
-            }
-            else
-            {
-                if (ImGui.MenuItem("Leave Lobby"))
-                {
-                    Plugin.Lobbies.LeaveLobby(_lobbyId);
-                }
-            }
+            ImGui.SetClipboardText(lobby.State.JoinCode);
         }
 
+        if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Refresh Join Code"))
+        {
+            Plugin.Lobbies.RegenerateJoinCode(_lobbyId);
+        }
+
+        if (lobby.IsModeratorOrAbove && ImGui.MenuItem("Rename Lobby"))
+        {
+            _renameBuffer = lobby.State.Name;
+            _openRenamePopup = true;
+        }
+
+        if (lobby.IsOwner)
+        {
+            if (ImGui.MenuItem("Close Lobby"))
+            {
+                Plugin.Lobbies.CloseLobby(_lobbyId);
+            }
+        }
+        else
+        {
+            if (ImGui.MenuItem("Leave Lobby"))
+            {
+                Plugin.Lobbies.LeaveLobby(_lobbyId);
+            }
+        }
     }
 
     private void DrawRenamePopup()
@@ -160,5 +142,4 @@ internal class LobbyDetailWindow : Window
             ImGui.CloseCurrentPopup();
         }
     }
-
 }

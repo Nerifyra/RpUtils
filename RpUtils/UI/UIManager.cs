@@ -3,7 +3,6 @@ using RpUtils.Features.Lobbies.UI;
 using RpUtils.Features.Sonar.UI;
 using RpUtils.UI.Windows;
 using System;
-using System.Collections.Generic;
 
 namespace RpUtils.UI;
 
@@ -18,8 +17,6 @@ public sealed class UIManager : IDisposable
     private readonly ShareLocationWindow _shareLocationWindow;
     private readonly FindRoleplayWindow _findRoleplayWindow;
     private readonly ChangelogWindow _changelogWindow;
-
-    private readonly Dictionary<string, LobbyDetailWindow> _lobbyDetailWindows = [];
 
     public UIManager()
     {
@@ -52,10 +49,6 @@ public sealed class UIManager : IDisposable
         if (Plugin.Configuration.ShowChangelogOnUpdate
             && Plugin.Configuration.LastSeenChangelogVersion != currentRelease)
             _changelogWindow.IsOpen = true;
-
-        // Subscribe to lobby lifecycle events
-        Plugin.Lobbies.OnLobbyEntered += OpenLobbyDetail;
-        Plugin.Lobbies.OnLobbyRemoved += CloseLobbyDetail;
     }
 
     public void Draw() => _windowSystem.Draw();
@@ -63,30 +56,9 @@ public sealed class UIManager : IDisposable
     public void ToggleToolbarWindow() => _toolbarWindow.Toggle();
     public void ToggleChangelogWindow() => _changelogWindow.Toggle();
 
-    public void OpenLobbyDetail(string lobbyId)
-    {
-        if (_lobbyDetailWindows.TryGetValue(lobbyId, out var existing))
-        {
-            existing.IsOpen = true;
-            return;
-        }
-
-        var window = new LobbyDetailWindow(lobbyId);
-        _lobbyDetailWindows[lobbyId] = window;
-        _windowSystem.AddWindow(window);
-    }
-
-    public void CloseLobbyDetail(string lobbyId)
-    {
-        if (!_lobbyDetailWindows.Remove(lobbyId, out var window)) return;
-        window.IsOpen = false;
-        _windowSystem.RemoveWindow(window);
-    }
 
     public void Dispose()
     {
-        Plugin.Lobbies.OnLobbyEntered -= OpenLobbyDetail;
-        Plugin.Lobbies.OnLobbyRemoved -= CloseLobbyDetail;
         _windowSystem.RemoveAllWindows();
         Fonts.Dispose();
     }
