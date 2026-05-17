@@ -62,6 +62,9 @@ internal class MarkersTab
             return;
         }
 
+        using var child = ImRaii.Child($"MarkersScroll##{_lobbyId}", new Vector2(0, 0), false);
+        if (!child.Success) return;
+
         foreach (var marker in markers)
             DrawMarkerRow(marker);
     }
