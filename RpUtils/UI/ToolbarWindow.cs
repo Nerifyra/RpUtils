@@ -80,6 +80,16 @@ internal class ToolbarWindow : Window
         return Plugin.ClientState.IsLoggedIn;
     }
 
+    public override void OnOpen() => PersistToolbarVisibility(true);
+    public override void OnClose() => PersistToolbarVisibility(false);
+
+    private static void PersistToolbarVisibility(bool visible)
+    {
+        if (Plugin.Configuration.ShowToolbar == visible) return;
+        Plugin.Configuration.ShowToolbar = visible;
+        Plugin.Configuration.Save();
+    }
+
     public override void Draw()
     {
         using (ImRaii.Disabled(!Plugin.ConnectionStatus.IsConnected))
