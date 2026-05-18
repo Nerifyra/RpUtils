@@ -157,6 +157,15 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
+    public async Task SetNpcVisibility(string encounterId, string participantId, bool isVisible)
+    {
+        var success = await _service.SetNpcVisibility(encounterId, participantId, isVisible);
+        if (!success)
+        {
+            ShowError("Failed to set NPC visibility.");
+        }
+    }
+
     public async Task EndEncounter(string encounterId)
     {
         var success = await _service.EndEncounter(encounterId);

@@ -132,6 +132,21 @@ public sealed class EncountersService
         }
     }
 
+    public async Task<bool> SetNpcVisibility(string encounterId, string participantId, bool isVisible)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return false;
+            await _hub.Connection!.InvokeAsync("SetNpcVisibility", encounterId, participantId, isVisible);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to set NPC visibility.");
+            return false;
+        }
+    }
+
     public async Task<bool> EndEncounter(string encounterId)
     {
         try

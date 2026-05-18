@@ -19,6 +19,7 @@ public interface IEncountersController
     Task AddNpcParticipant(string encounterId, string displayName);
     Task RemoveNpcParticipant(string encounterId, string participantId);
     Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName);
+    Task SetNpcVisibility(string encounterId, string participantId, bool isVisible);
     Task EndEncounter(string encounterId);
     Task RefreshEncounters(string lobbyId);
 }

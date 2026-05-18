@@ -226,6 +226,9 @@ internal class EncounterDetailTab
 
         foreach (var participant in encounter.Participants)
         {
+            // Hide invisible NPCs from non-DM viewers entirely; DMs see them all (with toggle).
+            if (!isDm && participant.IsNpc && !participant.IsVisible) continue;
+
             DrawParticipantRow(encounterId, participant, isDm, rolls, nextRollTargetIds);
         }
 
@@ -349,6 +352,17 @@ internal class EncounterDetailTab
         ImGui.SameLine(0, 0);
 
         ImGui.Text(participant.DisplayName);
+
+        // DM-only visibility toggle inline with the NPC's name.
+        if (isDm && participant.IsNpc)
+        {
+            ImGui.SameLine();
+            var visIcon = participant.IsVisible ? FontAwesomeIcon.Eye : FontAwesomeIcon.EyeSlash;
+            if (ImGuiComponents.IconButton($"##vis{participant.ParticipantId}", visIcon))
+                Plugin.Encounters.SetNpcVisibility(encounterId, participant.ParticipantId, !participant.IsVisible);
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(participant.IsVisible ? "Hide from players" : "Show to players");
+        }
 
         // NPC context menu on the name column
         if (isDm && participant.IsNpc)
