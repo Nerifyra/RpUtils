@@ -17,6 +17,7 @@ internal class MarkersTab
 
     private readonly string _lobbyId;
     private readonly IconPickerPopup _iconPickerPopup = new();
+    private readonly MarkerConfigPopup _markerConfigPopup = new();
 
     public MarkersTab(string lobbyId)
     {
@@ -32,7 +33,11 @@ internal class MarkersTab
 
         if (canManage) DrawMarkersControls();
         DrawMarkersList(canManage);
-        if (canManage) _iconPickerPopup.Draw();
+        if (canManage)
+        {
+            _iconPickerPopup.Draw();
+            _markerConfigPopup.Draw();
+        }
     }
 
     private void DrawMarkersControls()
@@ -100,7 +105,7 @@ internal class MarkersTab
 
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         var btnWidth = ImGui.GetFrameHeight();
-        var rightReserve = (btnWidth + spacing) * 4;
+        var rightReserve = (btnWidth + spacing) * 5;
 
         var label = marker.Label;
         ImGui.SetNextItemWidth(-rightReserve);
@@ -132,6 +137,11 @@ internal class MarkersTab
                 Plugin.Markers.BeginPlacement(marker);
             TooltipOnHover(marker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
         }
+
+        ImGui.SameLine();
+        if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
+            _markerConfigPopup.Open(marker);
+        TooltipOnHover("Configure");
 
         ImGui.SameLine();
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Trash))

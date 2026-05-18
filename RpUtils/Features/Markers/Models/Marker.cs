@@ -15,7 +15,9 @@ public class Marker
     public uint IconId { get; set; }
     public string Label { get; set; } = string.Empty;
     public bool IsPlaced { get; set; }
-    public bool IsVisible { get; set; } = true;
+    public bool IsVisible { get; set; } = false;
+    public float Size { get; set; } = 1f;
+    public uint Color { get; set; } = 0xFFFFFFFFu;
 
     [JsonIgnore]
     public Vector3 WorldPos
