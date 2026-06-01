@@ -4,7 +4,10 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Encounters.Models;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.Features.Markers.Models;
 using RpUtils.Features.Rolls.Models;
+using RpUtils.UI.Components;
+using RpUtils.UI.Components.IconPicker;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -18,6 +21,7 @@ internal class EncounterDetailTab
     private readonly Dictionary<string, int> _initiativeBuffers = [];
     private readonly HashSet<string> _activeInputs = [];
     private readonly RollConfigPopup _rollConfigPopup = new();
+    private readonly IconPickerPopup _iconPickerPopup = new();
     private string _npcNameBuffer = string.Empty;
     private bool _openNpcPopup;
     private string _renameNpcBuffer = string.Empty;
@@ -34,6 +38,8 @@ internal class EncounterDetailTab
         ImGui.Separator();
 
         DrawParticipantsTable(encounterId, encounter, lobby);
+
+        _iconPickerPopup.Draw();
     }
 
     private void DrawControls(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
@@ -118,7 +124,10 @@ internal class EncounterDetailTab
         {
             if (!string.IsNullOrWhiteSpace(_npcNameBuffer))
             {
-                Plugin.Encounters.AddNpcParticipant(encounterId, _npcNameBuffer.Trim());
+                Plugin.Encounters.UpsertNpc(encounterId, new UpsertNpcRequest(
+                    ParticipantId: null,
+                    DisplayName: _npcNameBuffer.Trim(),
+                    IsVisible: null));
                 _npcNameBuffer = string.Empty;
                 ImGui.CloseCurrentPopup();
             }
@@ -155,7 +164,7 @@ internal class EncounterDetailTab
         using var table = ImRaii.Table($"Participants##{encounterId}", columnCount, flags);
         if (!table.Success) return;
 
-        ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 20);
+        ImGui.TableSetupColumn("##Icon", ImGuiTableColumnFlags.WidthFixed, 28);
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Initiative", ImGuiTableColumnFlags.WidthFixed, 80);
 
@@ -315,33 +324,7 @@ internal class EncounterDetailTab
 
         // Icon column
         ImGui.TableNextColumn();
-        using (ImRaii.PushFont(UiBuilder.IconFont))
-        {
-            if (participant.IsCurrent)
-            {
-                ImGui.TextColored(Theme.GoldColor, FontAwesomeIcon.Star.ToIconString());
-            }
-            else if (participant.IsNpc)
-            {
-                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Robot.ToIconString());
-            }
-            else if (participant.Role == nameof(Lobbies.Models.LobbyRole.Owner))
-            {
-                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Crown.ToIconString());
-            }
-            else if (participant.Role == nameof(Lobbies.Models.LobbyRole.Moderator))
-            {
-                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Shield.ToIconString());
-            }
-            else if (participant.Role == nameof(Lobbies.Models.LobbyRole.Ghost))
-            {
-                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Ghost.ToIconString());
-            }
-            else
-            {
-                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.User.ToIconString());
-            }
-        }
+        DrawParticipantIconCell(participant, isDm);
 
         // Name column
         ImGui.TableNextColumn();
@@ -353,15 +336,38 @@ internal class EncounterDetailTab
 
         ImGui.Text(participant.DisplayName);
 
-        // DM-only visibility toggle inline with the NPC's name.
         if (isDm && participant.IsNpc)
         {
             ImGui.SameLine();
             var visIcon = participant.IsVisible ? FontAwesomeIcon.Eye : FontAwesomeIcon.EyeSlash;
             if (ImGuiComponents.IconButton($"##vis{participant.ParticipantId}", visIcon))
-                Plugin.Encounters.SetNpcVisibility(encounterId, participant.ParticipantId, !participant.IsVisible);
+                Plugin.Encounters.UpsertNpc(encounterId, new UpsertNpcRequest(
+                    ParticipantId: participant.ParticipantId,
+                    DisplayName: null,
+                    IsVisible: !participant.IsVisible));
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip(participant.IsVisible ? "Hide from players" : "Show to players");
+
+            var attachedMarker = GetAttachedMarker(participant);
+            if (attachedMarker != null)
+            {
+                ImGui.SameLine();
+                var isPlacingThis = Plugin.Markers.PlacingMarker == attachedMarker;
+                if (isPlacingThis)
+                {
+                    if (ImGuiComponents.IconButton($"##cancelPlace{participant.ParticipantId}", FontAwesomeIcon.Ban))
+                        Plugin.Markers.CancelPlacement();
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip("Cancel placement (or right-click / Esc)");
+                }
+                else
+                {
+                    if (ImGuiComponents.IconButton($"##place{participant.ParticipantId}", FontAwesomeIcon.MapMarkerAlt))
+                        Plugin.Markers.BeginPlacement(attachedMarker);
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(attachedMarker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
+                }
+            }
         }
 
         // NPC context menu on the name column
@@ -433,6 +439,67 @@ internal class EncounterDetailTab
         }
     }
 
+    private void DrawParticipantIconCell(EncounterParticipant participant, bool isDm)
+    {
+        if (participant.IsCurrent)
+        {
+            using (ImRaii.PushFont(UiBuilder.IconFont))
+                ImGui.TextColored(Theme.GoldColor, FontAwesomeIcon.Star.ToIconString());
+            return;
+        }
+
+        if (participant.IsNpc)
+        {
+            var marker = GetAttachedMarker(participant);
+            if (marker != null) DrawNpcMarkerIcon(marker, isDm);
+            else DrawNpcRobotIcon();
+            return;
+        }
+
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            if (participant.Role == nameof(LobbyRole.Owner))
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Crown.ToIconString());
+            else if (participant.Role == nameof(LobbyRole.Moderator))
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Shield.ToIconString());
+            else if (participant.Role == nameof(LobbyRole.Ghost))
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Ghost.ToIconString());
+            else
+                ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.User.ToIconString());
+        }
+    }
+
+    private void DrawNpcMarkerIcon(Marker marker, bool isDm)
+    {
+        var size = new Vector2(24, 24);
+        if (isDm)
+        {
+            if (IconDisplay.DrawButton(marker.IconId, size))
+                _iconPickerPopup.Open(marker.IconId, picked =>
+                {
+                    marker.IconId = picked;
+                    _ = Plugin.Markers.UpdateMarker(marker);
+                });
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Change marker icon");
+        }
+        else
+        {
+            IconDisplay.Draw(marker.IconId, size);
+        }
+    }
+
+    private static void DrawNpcRobotIcon()
+    {
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+            ImGui.TextColored(Theme.GrayColor, FontAwesomeIcon.Robot.ToIconString());
+    }
+
+    private static Marker? GetAttachedMarker(EncounterParticipant participant)
+    {
+        if (string.IsNullOrEmpty(participant.MarkerId)) return null;
+        return Plugin.Markers.Markers.GetValueOrDefault(participant.MarkerId);
+    }
+
     private void DrawRenameNpcPopup(string encounterId)
     {
         if (_pendingRenameNpcId != null)
@@ -454,7 +521,10 @@ internal class EncounterDetailTab
         {
             if (!string.IsNullOrWhiteSpace(_renameNpcBuffer) && _activeRenameNpcId != null)
             {
-                Plugin.Encounters.RenameNpcParticipant(encounterId, _activeRenameNpcId, _renameNpcBuffer.Trim());
+                Plugin.Encounters.UpsertNpc(encounterId, new UpsertNpcRequest(
+                    ParticipantId: _activeRenameNpcId,
+                    DisplayName: _renameNpcBuffer.Trim(),
+                    IsVisible: null));
                 _activeRenameNpcId = null;
                 ImGui.CloseCurrentPopup();
             }

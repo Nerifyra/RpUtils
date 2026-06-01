@@ -13,9 +13,9 @@ public sealed class MarkersController : IMarkersController, IDisposable
     private readonly MarkersService _service;
     private readonly MarkerRenderer _renderer;
     private readonly MarkerPlacement _placement;
-    private readonly Dictionary<Guid, Marker> _markers = [];
+    private readonly Dictionary<string, Marker> _markers = [];
 
-    public IReadOnlyDictionary<Guid, Marker> Markers => _markers;
+    public IReadOnlyDictionary<string, Marker> Markers => _markers;
     public Marker? PlacingMarker { get; private set; }
 
     public event Action? OnStateChanged;
@@ -50,7 +50,7 @@ public sealed class MarkersController : IMarkersController, IDisposable
         OnStateChanged?.Invoke();
     }
 
-    private void OnMarkerRemoved(Guid id)
+    private void OnMarkerRemoved(string id)
     {
         if (PlacingMarker?.Id == id) CancelPlacement();
         _markers.Remove(id);
@@ -61,7 +61,7 @@ public sealed class MarkersController : IMarkersController, IDisposable
     {
         var marker = new Marker
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.NewGuid().ToString(),
             LobbyId = lobbyId,
             IconId = iconId,
         };
@@ -75,7 +75,7 @@ public sealed class MarkersController : IMarkersController, IDisposable
         if (!success) ShowError("Failed to update marker.");
     }
 
-    public async Task RemoveMarker(Guid id)
+    public async Task RemoveMarker(string id)
     {
         var success = await _service.RemoveMarker(id);
         if (!success) ShowError("Failed to remove marker.");

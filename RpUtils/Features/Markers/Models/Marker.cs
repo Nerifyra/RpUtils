@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -6,7 +5,7 @@ namespace RpUtils.Features.Markers.Models;
 
 public class Marker
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string LobbyId { get; set; } = string.Empty;
     public uint TerritoryType { get; set; }
     public float PosX { get; set; }

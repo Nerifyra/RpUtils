@@ -16,10 +16,8 @@ public interface IEncountersController
     Task AdvanceTurn(string encounterId);
     Task ReverseTurn(string encounterId);
     Task SetInitiative(string encounterId, string participantId, int value);
-    Task AddNpcParticipant(string encounterId, string displayName);
+    Task UpsertNpc(string encounterId, UpsertNpcRequest request);
     Task RemoveNpcParticipant(string encounterId, string participantId);
-    Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName);
-    Task SetNpcVisibility(string encounterId, string participantId, bool isVisible);
     Task EndEncounter(string encounterId);
     Task RefreshEncounters(string lobbyId);
 }

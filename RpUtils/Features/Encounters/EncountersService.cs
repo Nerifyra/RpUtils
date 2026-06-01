@@ -86,18 +86,17 @@ public sealed class EncountersService
         }
     }
 
-    public async Task<bool> AddNpcParticipant(string encounterId, string displayName)
+    public async Task<bool> UpsertNpc(string encounterId, UpsertNpcRequest request)
     {
         try
         {
             if (!_hub.IsConnected) return false;
-            await _hub.Connection!.InvokeAsync("AddNpcParticipant", encounterId, displayName);
-            Plugin.Log.Debug($"Added NPC to encounter {encounterId}");
+            await _hub.Connection!.InvokeAsync("UpsertNpc", encounterId, request);
             return true;
         }
         catch (Exception ex)
         {
-            Plugin.Log.Error(ex, "Failed to add NPC participant.");
+            Plugin.Log.Error(ex, "Failed to upsert NPC.");
             return false;
         }
     }
@@ -113,36 +112,6 @@ public sealed class EncountersService
         catch (Exception ex)
         {
             Plugin.Log.Error(ex, "Failed to remove NPC participant.");
-            return false;
-        }
-    }
-
-    public async Task<bool> RenameNpcParticipant(string encounterId, string participantId, string newDisplayName)
-    {
-        try
-        {
-            if (!_hub.IsConnected) return false;
-            await _hub.Connection!.InvokeAsync("RenameNpcParticipant", encounterId, participantId, newDisplayName);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex, "Failed to rename NPC participant.");
-            return false;
-        }
-    }
-
-    public async Task<bool> SetNpcVisibility(string encounterId, string participantId, bool isVisible)
-    {
-        try
-        {
-            if (!_hub.IsConnected) return false;
-            await _hub.Connection!.InvokeAsync("SetNpcVisibility", encounterId, participantId, isVisible);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex, "Failed to set NPC visibility.");
             return false;
         }
     }

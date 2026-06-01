@@ -130,12 +130,12 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
-    public async Task AddNpcParticipant(string encounterId, string displayName)
+    public async Task UpsertNpc(string encounterId, UpsertNpcRequest request)
     {
-        var success = await _service.AddNpcParticipant(encounterId, displayName);
+        var success = await _service.UpsertNpc(encounterId, request);
         if (!success)
         {
-            ShowError("Failed to add NPC.");
+            ShowError("Failed to update NPC.");
         }
     }
 
@@ -145,24 +145,6 @@ public sealed class EncountersController : IEncountersController, IDisposable
         if (!success)
         {
             ShowError("Failed to remove NPC.");
-        }
-    }
-
-    public async Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName)
-    {
-        var success = await _service.RenameNpcParticipant(encounterId, participantId, newDisplayName);
-        if (!success)
-        {
-            ShowError("Failed to rename NPC.");
-        }
-    }
-
-    public async Task SetNpcVisibility(string encounterId, string participantId, bool isVisible)
-    {
-        var success = await _service.SetNpcVisibility(encounterId, participantId, isVisible);
-        if (!success)
-        {
-            ShowError("Failed to set NPC visibility.");
         }
     }
 

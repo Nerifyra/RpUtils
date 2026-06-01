@@ -20,5 +20,6 @@ public class EncounterParticipant
     public bool IsCurrent { get; set; }
     public bool IsNpc { get; set; }
     public bool IsVisible { get; set; } = true;
+    public string? MarkerId { get; set; }
     public string Role { get; set; } = string.Empty;
 }
