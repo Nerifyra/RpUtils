@@ -5,6 +5,7 @@ using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Encounters.Models;
 using RpUtils.Features.Lobbies.Models;
 using RpUtils.Features.Markers.Models;
+using RpUtils.Features.Markers.UI;
 using RpUtils.Features.Rolls.Models;
 using RpUtils.UI.Components;
 using RpUtils.UI.Components.IconPicker;
@@ -22,6 +23,7 @@ internal class EncounterDetailTab
     private readonly HashSet<string> _activeInputs = [];
     private readonly RollConfigPopup _rollConfigPopup = new();
     private readonly IconPickerPopup _iconPickerPopup = new();
+    private readonly MarkerConfigPopup _markerConfigPopup = new();
     private string _npcNameBuffer = string.Empty;
     private bool _openNpcPopup;
     private string _renameNpcBuffer = string.Empty;
@@ -40,6 +42,7 @@ internal class EncounterDetailTab
         DrawParticipantsTable(encounterId, encounter, lobby);
 
         _iconPickerPopup.Draw();
+        _markerConfigPopup.Draw();
     }
 
     private void DrawControls(string encounterId, EncounterState encounter, Lobby lobby, EncounterEditPopup editPopup)
@@ -367,6 +370,14 @@ internal class EncounterDetailTab
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip(attachedMarker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
                 }
+
+                ImGui.SameLine();
+                if (ImGuiComponents.IconButton($"##cfg{participant.ParticipantId}", FontAwesomeIcon.Cog))
+                    _markerConfigPopup.Open(attachedMarker);
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Configure marker");
+
+                
             }
         }
 
