@@ -18,6 +18,8 @@ public class Marker
     public float Size { get; set; } = 1f;
     public uint Color { get; set; } = 0xFFFFFFFFu;
 
+    public string? NpcParticipantId { get; set; }
+
     [JsonIgnore]
     public Vector3 WorldPos
     {

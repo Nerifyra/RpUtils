@@ -53,8 +53,12 @@ internal class MarkersTab
 
     private void DrawMarkersList(bool canManage)
     {
+        // NPC-attached markers are edited from the encounter row (cog button there); hiding
+        // them here keeps this tab focused on standalone markers
         var markers = Plugin.Markers.Markers.Values
-            .Where(m => m.LobbyId == _lobbyId && (canManage || m.IsVisible))
+            .Where(m => m.LobbyId == _lobbyId
+                && (canManage || m.IsVisible)
+                && m.NpcParticipantId == null)
             .ToList();
 
         if (markers.Count == 0)
