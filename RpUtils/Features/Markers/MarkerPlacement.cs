@@ -51,7 +51,7 @@ internal sealed class MarkerPlacement : IDisposable
             return;
         }
 
-        if (leftDown && !_prevLeftDown) Commit(placingMarker);
+        if (leftDown && !_prevLeftDown && !ImGui.GetIO().WantCaptureMouse) Commit(placingMarker);
         else if ((rightDown && !_prevRightDown) || (escDown && !_prevEscDown))
             Plugin.Markers.CancelPlacement();
 
