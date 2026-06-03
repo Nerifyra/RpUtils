@@ -1,6 +1,6 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Markers.Models;
 using RpUtils.Features.Markers.Rendering;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,19 +66,19 @@ public sealed class MarkersController : IMarkersController, IDisposable
             IconId = iconId,
         };
         var success = await _service.UpdateMarker(marker);
-        if (!success) ShowError("Failed to add marker.");
+        if (!success) Notify.Error("Failed to add marker.");
     }
 
     public async Task UpdateMarker(Marker marker)
     {
         var success = await _service.UpdateMarker(marker);
-        if (!success) ShowError("Failed to update marker.");
+        if (!success) Notify.Error("Failed to update marker.");
     }
 
     public async Task RemoveMarker(string id)
     {
         var success = await _service.RemoveMarker(id);
-        if (!success) ShowError("Failed to remove marker.");
+        if (!success) Notify.Error("Failed to remove marker.");
     }
 
     public async Task RefreshMarkers(string lobbyId)
@@ -105,15 +105,6 @@ public sealed class MarkersController : IMarkersController, IDisposable
 
     public void BeginPlacement(Marker marker) => PlacingMarker = marker;
     public void CancelPlacement() => PlacingMarker = null;
-
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
-    }
 
     public void Dispose()
     {

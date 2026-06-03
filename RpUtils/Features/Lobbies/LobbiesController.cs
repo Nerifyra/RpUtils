@@ -1,5 +1,5 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -59,7 +59,7 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         var result = await _service.CreateLobby(characterName);
         if (result is null)
         {
-            ShowError("Failed to create lobby.");
+            Notify.Error("Failed to create lobby.");
             return;
         }
 
@@ -74,7 +74,7 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         var result = await _service.JoinLobby(joinCode, characterName);
         if (result is null)
         {
-            ShowError("Failed to join lobby.");
+            Notify.Error("Failed to join lobby.");
             return;
         }
 
@@ -201,15 +201,6 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         var name = localPlayer.Name.ToString();
         var world = Plugin.PlayerState.HomeWorld.Value.Name.ToString();
         return $"{name}@{world}";
-    }
-
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
     }
 
     public void Dispose()

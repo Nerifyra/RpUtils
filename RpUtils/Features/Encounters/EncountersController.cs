@@ -1,5 +1,5 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Encounters.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,7 +90,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpdateEncounter(lobbyId, null, name, playerIds);
         if (!success)
         {
-            ShowError("Failed to create encounter.");
+            Notify.Error("Failed to create encounter.");
         }
     }
 
@@ -99,7 +99,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpdateEncounter(lobbyId, encounterId, name, playerIds);
         if (!success)
         {
-            ShowError("Failed to update encounter.");
+            Notify.Error("Failed to update encounter.");
         }
     }
 
@@ -108,7 +108,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.ReverseTurn(encounterId);
         if (!success)
         {
-            ShowError("Failed to reverse turn.");
+            Notify.Error("Failed to reverse turn.");
         }
     }
 
@@ -117,7 +117,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.AdvanceTurn(encounterId);
         if (!success)
         {
-            ShowError("Failed to advance turn.");
+            Notify.Error("Failed to advance turn.");
         }
     }
 
@@ -126,7 +126,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.SetInitiative(encounterId, participantId, value);
         if (!success)
         {
-            ShowError("Failed to set initiative.");
+            Notify.Error("Failed to set initiative.");
         }
     }
 
@@ -135,7 +135,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpsertNpc(encounterId, request);
         if (!success)
         {
-            ShowError("Failed to update NPC.");
+            Notify.Error("Failed to update NPC.");
         }
     }
 
@@ -144,7 +144,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.RemoveNpcParticipant(encounterId, participantId);
         if (!success)
         {
-            ShowError("Failed to remove NPC.");
+            Notify.Error("Failed to remove NPC.");
         }
     }
 
@@ -153,7 +153,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.EndEncounter(encounterId);
         if (!success)
         {
-            ShowError("Failed to end encounter.");
+            Notify.Error("Failed to end encounter.");
         }
     }
 
@@ -177,15 +177,6 @@ public sealed class EncountersController : IEncountersController, IDisposable
         {
             Plugin.Log.Error(ex, "Failed to refresh encounters.");
         }
-    }
-
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
     }
 
     public void Dispose()
