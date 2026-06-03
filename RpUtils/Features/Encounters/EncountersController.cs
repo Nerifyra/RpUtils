@@ -94,6 +94,10 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var nowOnDeck = IsLocalPlayerOnDeck(current, lobby.PlayerId);
         if (!nowOnDeck) return false;
 
+        // If we're in a 2 person encounter, we don't want to spam them with on deck notifications
+        var wasCurrent = previous.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        if (wasCurrent) return false;
+
         var wasOnDeck = IsLocalPlayerOnDeck(previous, lobby.PlayerId);
         return !wasOnDeck;
     }
