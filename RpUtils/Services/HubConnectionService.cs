@@ -14,9 +14,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
     private readonly CancellationTokenSource _cts = new();
 
     public event Action<HubConnection>? OnConnected;
-    public event Action? OnReconnected;
-    public event Action? OnDisconnected;
-    public event Action<Exception?>? OnReconnecting;
 
     public ConnectionState Status { get; private set; } = ConnectionState.Disconnected;
     public event Action<ConnectionState>? OnStatusChanged;
@@ -58,8 +55,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
             else
                 Plugin.Log.Info("RpUtils connection closed.");
             SetStatus(ConnectionState.Disconnected);
-
-            OnDisconnected?.Invoke();
             return Task.CompletedTask;
         };
 
@@ -67,7 +62,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         {
             Plugin.Log.Warning(ex, "RpUtils connection lost, attempting to reconnect...");
             SetStatus(ConnectionState.Reconnecting);
-            OnReconnecting?.Invoke(ex);
             return Task.CompletedTask;
         };
 
@@ -75,7 +69,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         {
             Plugin.Log.Info("Reconnected to RpUtils server.");
             SetStatus(ConnectionState.Connected);
-            OnReconnected?.Invoke();
             return Task.CompletedTask;
         };
 

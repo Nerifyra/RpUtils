@@ -1,5 +1,6 @@
 using RpUtils.Features.Markers.Models;
 using RpUtils.Features.Markers.Rendering;
+using RpUtils.Models;
 using RpUtils.Services;
 using System;
 using System.Collections.Generic;
@@ -30,9 +31,30 @@ public sealed class MarkersController : IMarkersController, IDisposable
         _service.OnMarkerRemoved += OnMarkerRemoved;
         Plugin.Lobbies.OnLobbyEntered += OnLobbyEntered;
         Plugin.Lobbies.OnLobbyRemoved += OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
     }
 
     private void OnLobbyEntered(string lobbyId) => _ = RefreshMarkers(lobbyId);
+
+    private void OnConnectionStateChanged(ConnectionState state)
+    {
+        if (state == ConnectionState.Connected)
+        {
+            foreach (var lobbyId in Plugin.Lobbies.Lobbies.Keys)
+                _ = RefreshMarkers(lobbyId);
+        }
+        else if (state is ConnectionState.Disconnected or ConnectionState.Disabled)
+        {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        CancelPlacement();
+        _markers.Clear();
+        OnStateChanged?.Invoke();
+    }
 
     private void OnLobbyRemoved(string lobbyId)
     {
@@ -112,6 +134,7 @@ public sealed class MarkersController : IMarkersController, IDisposable
         _service.OnMarkerRemoved -= OnMarkerRemoved;
         Plugin.Lobbies.OnLobbyEntered -= OnLobbyEntered;
         Plugin.Lobbies.OnLobbyRemoved -= OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
         _renderer.Dispose();
         _placement.Dispose();
     }

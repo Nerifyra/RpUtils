@@ -1,4 +1,5 @@
 using RpUtils.Features.Encounters.Models;
+using RpUtils.Models;
 using RpUtils.Services;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,37 @@ public sealed class EncountersController : IEncountersController, IDisposable
 
         _service.OnEncounterStateUpdated += OnEncounterStateUpdated;
         _service.OnEncounterEnded += OnEncounterEnded;
+        Plugin.Lobbies.OnLobbyEntered += OnLobbyEntered;
+        Plugin.Lobbies.OnLobbyRemoved += OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
+    }
+
+    private void OnLobbyEntered(string lobbyId) => _ = RefreshEncounters(lobbyId);
+
+    private void OnLobbyRemoved(string lobbyId)
+    {
+        foreach (var id in _encounters.Keys.Where(id => _encounters[id].LobbyId == lobbyId).ToList())
+            _encounters.Remove(id);
+        OnStateChanged?.Invoke();
+    }
+
+    private void OnConnectionStateChanged(ConnectionState state)
+    {
+        if (state == ConnectionState.Connected)
+        {
+            foreach (var lobbyId in Plugin.Lobbies.Lobbies.Keys)
+                _ = RefreshEncounters(lobbyId);
+        }
+        else if (state is ConnectionState.Disconnected or ConnectionState.Disabled)
+        {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        _encounters.Clear();
+        OnStateChanged?.Invoke();
     }
 
     private void OnEncounterStateUpdated(EncounterState state)
@@ -183,5 +215,8 @@ public sealed class EncountersController : IEncountersController, IDisposable
     {
         _service.OnEncounterStateUpdated -= OnEncounterStateUpdated;
         _service.OnEncounterEnded -= OnEncounterEnded;
+        Plugin.Lobbies.OnLobbyEntered -= OnLobbyEntered;
+        Plugin.Lobbies.OnLobbyRemoved -= OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
     }
 }
