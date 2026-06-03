@@ -18,6 +18,7 @@ public sealed class SonarService
     {
         _hub = hub;
         _hub.OnConnected += _ => OnReconnected?.Invoke();
+        _hub.OnReconnected += () => OnReconnected?.Invoke();
     }
 
     public async Task SendLocation(int world, string map, float posX, float posZ, string activity)
