@@ -70,10 +70,7 @@ internal class ToolbarWindow : Window
             _toggleShareLocationWindow.Invoke();
         }
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(tooltip);
-        }
+        Tooltip.OnHover(tooltip);
     }
 
     public override bool DrawConditions()

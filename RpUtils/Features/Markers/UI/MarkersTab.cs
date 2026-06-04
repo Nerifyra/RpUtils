@@ -48,7 +48,7 @@ internal class MarkersTab
 
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Plus))
             _ = Plugin.Markers.AddMarker(_lobbyId, IconPickerComponent.DefaultIconId);
-        TooltipOnHover("Add marker");
+        Tooltip.OnHover("Add marker");
     }
 
     private void DrawMarkersList(bool canManage)
@@ -103,7 +103,7 @@ internal class MarkersTab
                 marker.IconId = id;
                 _ = Plugin.Markers.UpdateMarker(marker);
             });
-        TooltipOnHover("Change icon");
+        Tooltip.OnHover("Change icon");
 
         ImGui.SameLine();
 
@@ -125,7 +125,7 @@ internal class MarkersTab
             marker.IsVisible = !marker.IsVisible;
             _ = Plugin.Markers.UpdateMarker(marker);
         }
-        TooltipOnHover(marker.IsVisible ? "Hide marker" : "Show marker");
+        Tooltip.OnHover(marker.IsVisible ? "Hide marker" : "Show marker");
 
         ImGui.SameLine();
         var isPlacingThis = Plugin.Markers.PlacingMarker == marker;
@@ -133,28 +133,23 @@ internal class MarkersTab
         {
             if (ImGuiComponents.IconButton(FontAwesomeIcon.Ban))
                 Plugin.Markers.CancelPlacement();
-            TooltipOnHover("Cancel placement (or right-click / Esc)");
+            Tooltip.OnHover("Cancel placement (or right-click / Esc)");
         }
         else
         {
             if (ImGuiComponents.IconButton(FontAwesomeIcon.MapMarkerAlt))
                 Plugin.Markers.BeginPlacement(marker);
-            TooltipOnHover(marker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
+            Tooltip.OnHover(marker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
         }
 
         ImGui.SameLine();
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
             _markerConfigPopup.Open(marker);
-        TooltipOnHover("Configure");
+        Tooltip.OnHover("Configure");
 
         ImGui.SameLine();
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Trash))
             _ = Plugin.Markers.RemoveMarker(marker.Id);
-        TooltipOnHover("Remove marker");
-    }
-
-    private static void TooltipOnHover(string text)
-    {
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip(text);
+        Tooltip.OnHover("Remove marker");
     }
 }

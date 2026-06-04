@@ -89,8 +89,7 @@ internal sealed class MarkerConfigPopup
                 _isVisible = !_isVisible;
             ImGui.SetWindowFontScale(1f);
         }
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(_isVisible ? "Hide marker" : "Show marker");
+        Tooltip.OnHover(_isVisible ? "Hide marker" : "Show marker");
 
         ImGui.SameLine();
         DrawColorButton();
@@ -109,8 +108,7 @@ internal sealed class MarkerConfigPopup
         var rgb = ColorToVector3(_color);
         if (ImGui.ColorButton("##color", new Vector4(rgb, 1f), ImGuiColorEditFlags.NoTooltip, ButtonSize))
             ImGui.OpenPopup(_colorPopupId);
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Color");
+        Tooltip.OnHover("Color");
 
         if (ImGui.BeginPopup(_colorPopupId))
         {

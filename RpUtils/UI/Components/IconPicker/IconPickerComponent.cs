@@ -138,6 +138,6 @@ public sealed class IconPickerComponent
         var clicked = IconDisplay.DrawButton(iconId, GridIconSize);
 
         if (clicked) SelectedIconId = iconId;
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip(iconId.ToString());
+        Tooltip.OnHover(iconId.ToString());
     }
 }

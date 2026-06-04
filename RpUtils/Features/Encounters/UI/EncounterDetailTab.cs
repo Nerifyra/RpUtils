@@ -348,8 +348,7 @@ internal class EncounterDetailTab
                     ParticipantId: participant.ParticipantId,
                     DisplayName: null,
                     IsVisible: !participant.IsVisible));
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(participant.IsVisible ? "Hide from players" : "Show to players");
+            Tooltip.OnHover(participant.IsVisible ? "Hide from players" : "Show to players");
 
             var attachedMarker = GetAttachedMarker(participant);
             if (attachedMarker != null)
@@ -360,22 +359,19 @@ internal class EncounterDetailTab
                 {
                     if (ImGuiComponents.IconButton($"##cancelPlace{participant.ParticipantId}", FontAwesomeIcon.Ban))
                         Plugin.Markers.CancelPlacement();
-                    if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip("Cancel placement (or right-click / Esc)");
+                    Tooltip.OnHover("Cancel placement (or right-click / Esc)");
                 }
                 else
                 {
                     if (ImGuiComponents.IconButton($"##place{participant.ParticipantId}", FontAwesomeIcon.MapMarkerAlt))
                         Plugin.Markers.BeginPlacement(attachedMarker);
-                    if (ImGui.IsItemHovered())
-                        ImGui.SetTooltip(attachedMarker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
+                    Tooltip.OnHover(attachedMarker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
                 }
 
                 ImGui.SameLine();
                 if (ImGuiComponents.IconButton($"##cfg{participant.ParticipantId}", FontAwesomeIcon.Cog))
                     _markerConfigPopup.Open(attachedMarker);
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Configure marker");
+                Tooltip.OnHover("Configure marker");
 
                 
             }
@@ -491,7 +487,7 @@ internal class EncounterDetailTab
                     marker.IconId = picked;
                     _ = Plugin.Markers.UpdateMarker(marker);
                 });
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Change marker icon");
+            Tooltip.OnHover("Change marker icon");
         }
         else
         {

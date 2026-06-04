@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.UI.Components;
 using System.Collections.Generic;
 using Theme = RpUtils.UI.Theme;
 
@@ -87,7 +88,7 @@ internal class ManageTab
                     _openGhostPopup = true;
                 }
             }
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Add Ghost Player");
+            Tooltip.OnHover("Add Ghost Player");
         }
 
         ImGui.TableNextColumn();
@@ -145,7 +146,7 @@ internal class ManageTab
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (columnWidth - iconWidth) * 0.5f);
                 ImGui.TextColored(color, iconText);
             }
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip(tooltip);
+            Tooltip.OnHover(tooltip);
         }
 
         // Name column

@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using RpUtils.UI.Components;
 using System;
 using System.Linq;
 
@@ -131,6 +132,6 @@ internal static class LobbyConfigTab
         ImGui.SameLine();
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Play))
             UIGlobals.PlayChatSoundEffect(soundId);
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Preview");
+        Tooltip.OnHover("Preview");
     }
 }

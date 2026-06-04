@@ -1,6 +1,7 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Utility;
+using RpUtils.UI.Components;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -47,10 +48,7 @@ internal static class GeneralConfigTab
                     await Plugin.ConnectionStatus.DisconnectAsync();
             });
         }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip("Toggling off disables the connection to RpUtils server and all features.");
-        }
+        Tooltip.OnHover("Toggling off disables the connection to RpUtils server and all features.");
 
         ImGui.Spacing();
 
@@ -61,10 +59,7 @@ internal static class GeneralConfigTab
             config.Save();
             Plugin.Sonar.ResetRoleplayingStatus();
         }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip("When enabled, your location sharing will automatically\nstart and stop when using the /roleplaying command.\nThis will disable toggling location sharing through the sonar button.");
-        }
+        Tooltip.OnHover("When enabled, your location sharing will automatically\nstart and stop when using the /roleplaying command.\nThis will disable toggling location sharing through the sonar button.");
 
         ImGui.Spacing();
 
