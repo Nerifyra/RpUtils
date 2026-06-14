@@ -1,5 +1,6 @@
 ﻿using Dalamud.Configuration;
 using System;
+using System.Collections.Generic;
 
 namespace RpUtils;
 
@@ -32,6 +33,9 @@ public class Configuration : IPluginConfiguration
     // ── Markers ───────────────────────────────────────────────────────
     public float MarkerIconSize { get; set; } = 28f;
     public float MarkerLabelScale { get; set; } = 1f;
+
+    // ── Icon Picker ───────────────────────────────────────────────────
+    public List<uint> FavoriteIcons { get; set; } = new();
 
     // ── Changelog ─────────────────────────────────────────────────────
     public string LastSeenChangelogVersion { get; set; } = "";

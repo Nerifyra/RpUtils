@@ -1,10 +1,9 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
-using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Markers.Models;
 using RpUtils.UI.Components;
 using RpUtils.UI.Components.IconPicker;
 using System.Numerics;
+using System;
 
 namespace RpUtils.Features.Markers.UI;
 
@@ -64,9 +63,6 @@ internal sealed class MarkerConfigPopup
             ImGui.SameLine();
             if (ImGui.Button("Cancel", new Vector2(DialogButtonWidth, 0))) Dismiss();
 
-            // Draw the nested icon picker INSIDE this modal's scope. If we drew it after
-            // EndPopup, its OpenPopup call would fire at the root popup stack and ImGui
-            // would close us out instead of stacking the picker on top.
             _iconPickerPopup.Draw();
 
             ImGui.EndPopup();
@@ -77,19 +73,6 @@ internal sealed class MarkerConfigPopup
     {
         if (IconDisplay.DrawButton(_iconId, ButtonSize))
             _iconPickerPopup.Open(_iconId, id => _iconId = id);
-
-        ImGui.SameLine();
-        var visIcon = _isVisible ? FontAwesomeIcon.Eye : FontAwesomeIcon.EyeSlash;
-        using (ImRaii.PushFont(UiBuilder.IconFont))
-        {
-            // Scale the glyph to fit the larger button — otherwise it renders at the font's native
-            // size and looks tiny inside a 32x32 frame. The 0.7 factor leaves a bit of padding.
-            ImGui.SetWindowFontScale(ButtonSize.Y / ImGui.GetFontSize() * 0.7f);
-            if (ImGui.Button(visIcon.ToIconString(), ButtonSize))
-                _isVisible = !_isVisible;
-            ImGui.SetWindowFontScale(1f);
-        }
-        Tooltip.OnHover(_isVisible ? "Hide marker" : "Show marker");
 
         ImGui.SameLine();
         DrawColorButton();
@@ -128,9 +111,9 @@ internal sealed class MarkerConfigPopup
 
     private static uint Vector3ToColor(Vector3 v)
     {
-        var r = (uint)(System.Math.Clamp(v.X, 0f, 1f) * 255f);
-        var g = (uint)(System.Math.Clamp(v.Y, 0f, 1f) * 255f);
-        var b = (uint)(System.Math.Clamp(v.Z, 0f, 1f) * 255f);
+        var r = (uint)(Math.Clamp(v.X, 0f, 1f) * 255f);
+        var g = (uint)(Math.Clamp(v.Y, 0f, 1f) * 255f);
+        var b = (uint)(Math.Clamp(v.Z, 0f, 1f) * 255f);
         return 0xFF000000u | (b << 16) | (g << 8) | r;
     }
 
