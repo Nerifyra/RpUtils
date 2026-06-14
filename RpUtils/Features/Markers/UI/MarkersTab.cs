@@ -42,10 +42,7 @@ internal class MarkersTab
 
     private void DrawMarkersControls()
     {
-        var buttonSize = ImGui.GetFrameHeight();
-        var totalWidth = buttonSize;
-        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - totalWidth) * 0.5f);
-
+        Layout.CenterCursorX(ImGui.GetFrameHeight());
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Plus))
             _ = Plugin.Markers.AddMarker(_lobbyId, IconPickerComponent.DefaultIconId);
         Tooltip.OnHover("Add marker");

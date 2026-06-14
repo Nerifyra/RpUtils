@@ -6,6 +6,7 @@ using RpUtils.Features.Encounters.UI;
 using RpUtils.Features.Lobbies.Models;
 using RpUtils.Features.Markers.UI;
 using RpUtils.UI;
+using RpUtils.UI.Components;
 
 namespace RpUtils.Features.Lobbies.UI;
 
@@ -56,8 +57,7 @@ internal class LobbyDetailView
 
         using (Plugin.UI.Fonts.Header.Push())
         {
-            var textWidth = ImGui.CalcTextSize(joinCode).X;
-            ImGui.SetCursorPosX((windowWidth - textWidth) * 0.5f);
+            Layout.CenterCursorX(ImGui.CalcTextSize(joinCode).X);
             ImGui.TextColored(Theme.GreenColor, joinCode);
             isHovered = ImGui.IsItemHovered();
 

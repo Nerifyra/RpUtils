@@ -54,7 +54,7 @@ internal class EncounterDetailTab
         var buttonSize = ImGui.GetFrameHeight();
         var spacing = ImGui.GetStyle().ItemSpacing.X;
         var totalWidth = buttonSize * 5 + spacing * 4;
-        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - totalWidth) * 0.5f);
+        Layout.CenterCursorX(totalWidth);
 
         using (ImRaii.Disabled(!isDm))
         {
