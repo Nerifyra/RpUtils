@@ -31,30 +31,31 @@ internal class MarkersTab
 
         var canManage = lobby.IsModeratorOrAbove;
 
-        if (canManage) DrawMarkersControls();
-        DrawMarkersList(canManage);
         if (canManage)
         {
+            DrawMarkersControls();
             _iconPickerPopup.Draw();
             _markerConfigPopup.Draw();
         }
+        DrawMarkersList(canManage);
     }
 
     private void DrawMarkersControls()
     {
-        var buttonSize = ImGui.GetFrameHeight();
-        var totalWidth = buttonSize;
-        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - totalWidth) * 0.5f);
-
+        Layout.CenterCursorX(ImGui.GetFrameHeight());
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Plus))
             _ = Plugin.Markers.AddMarker(_lobbyId, IconPickerComponent.DefaultIconId);
-        TooltipOnHover("Add marker");
+        Tooltip.OnHover("Add marker");
     }
 
     private void DrawMarkersList(bool canManage)
     {
+        // NPC-attached markers are edited from the encounter row (cog button there); hiding
+        // them here keeps this tab focused on standalone markers
         var markers = Plugin.Markers.Markers.Values
-            .Where(m => m.LobbyId == _lobbyId && (canManage || m.IsVisible))
+            .Where(m => m.LobbyId == _lobbyId
+                && (canManage || m.IsVisible)
+                && m.NpcParticipantId == null)
             .ToList();
 
         if (markers.Count == 0)
@@ -63,24 +64,34 @@ internal class MarkersTab
             return;
         }
 
-        using var child = ImRaii.Child($"MarkersScroll##{_lobbyId}", new Vector2(0, 0), false);
-        if (!child.Success) return;
+        var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
+        using var table = ImRaii.Table($"Markers##{_lobbyId}", 3, flags);
+        if (!table.Success) return;
+
+        ImGui.TableSetupColumn("##icon", ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("##label", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("##actions", ImGuiTableColumnFlags.WidthFixed);
 
         foreach (var marker in markers)
         {
-            if (canManage) DrawMarkerRow(marker);
-            else DrawReadOnlyMarkerRow(marker);
+            using var rowId = ImRaii.PushId(marker.Id.ToString());
+            ImGui.TableNextRow();
+
+            ImGui.TableNextColumn();
+            if (canManage) DrawMarkerIcon(marker);
+            else IconDisplay.Draw(marker.IconId, RowIconSize);
+
+            ImGui.TableNextColumn();
+            if (canManage) DrawMarkerLabel(marker);
+            else DrawReadOnlyLabel(marker);
+
+            ImGui.TableNextColumn();
+            if (canManage) DrawMarkerControls(marker);
         }
     }
 
-    private static void DrawReadOnlyMarkerRow(Marker marker)
+    private static void DrawReadOnlyLabel(Marker marker)
     {
-        using var rowId = ImRaii.PushId(marker.Id.ToString());
-
-        IconDisplay.Draw(marker.IconId, RowIconSize);
-
-        ImGui.SameLine();
-        // Vertically center label text against the icon.
         var textOffsetY = (RowIconSize.Y - ImGui.GetTextLineHeight()) * 0.5f;
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + textOffsetY);
         if (string.IsNullOrEmpty(marker.Label))
@@ -89,68 +100,60 @@ internal class MarkersTab
             ImGui.TextUnformatted(marker.Label);
     }
 
-    private void DrawMarkerRow(Marker marker)
+    private void DrawMarkerIcon(Marker marker)
     {
-        using var rowId = ImRaii.PushId(marker.Id.ToString());
-
         if (IconDisplay.DrawButton(marker.IconId, RowIconSize))
             _iconPickerPopup.Open(marker.IconId, id =>
             {
                 marker.IconId = id;
                 _ = Plugin.Markers.UpdateMarker(marker);
             });
-        TooltipOnHover("Change icon");
+        Tooltip.OnHover("Change icon");
+    }
 
-        ImGui.SameLine();
-
-        var spacing = ImGui.GetStyle().ItemSpacing.X;
-        var btnWidth = ImGui.GetFrameHeight();
-        var rightReserve = (btnWidth + spacing) * 5;
-
+    private void DrawMarkerLabel(Marker marker)
+    {
         var label = marker.Label;
-        ImGui.SetNextItemWidth(-rightReserve);
+        ImGui.SetNextItemWidth(-1); // fill the stretch column
         if (ImGui.InputTextWithHint("##Label", "Label", ref label, 64))
             marker.Label = label;
         if (ImGui.IsItemDeactivatedAfterEdit())
             _ = Plugin.Markers.UpdateMarker(marker);
+    }
 
-        ImGui.SameLine();
+    private void DrawMarkerControls(Marker marker)
+    {
         var visIcon = marker.IsVisible ? FontAwesomeIcon.Eye : FontAwesomeIcon.EyeSlash;
         if (ImGuiComponents.IconButton(visIcon))
         {
             marker.IsVisible = !marker.IsVisible;
             _ = Plugin.Markers.UpdateMarker(marker);
         }
-        TooltipOnHover(marker.IsVisible ? "Hide marker" : "Show marker");
+        Tooltip.OnHover(marker.IsVisible ? "Hide marker" : "Show marker");
 
-        ImGui.SameLine();
-        var isPlacingThis = Plugin.Markers.PlacingMarker == marker;
-        if (isPlacingThis)
+        ImGui.SameLine(0, 0);
+        var isPlacingMarker = Plugin.Markers.PlacingMarker == marker;
+        if (isPlacingMarker)
         {
             if (ImGuiComponents.IconButton(FontAwesomeIcon.Ban))
                 Plugin.Markers.CancelPlacement();
-            TooltipOnHover("Cancel placement (or right-click / Esc)");
+            Tooltip.OnHover("Cancel placement (or right-click / Esc)");
         }
         else
         {
             if (ImGuiComponents.IconButton(FontAwesomeIcon.MapMarkerAlt))
                 Plugin.Markers.BeginPlacement(marker);
-            TooltipOnHover(marker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
+            Tooltip.OnHover(marker.IsPlaced ? "Re-place with reticle" : "Place with reticle");
         }
 
-        ImGui.SameLine();
+        ImGui.SameLine(0, 0);
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
             _markerConfigPopup.Open(marker);
-        TooltipOnHover("Configure");
+        Tooltip.OnHover("Configure");
 
-        ImGui.SameLine();
+        ImGui.SameLine(0, 0);
         if (ImGuiComponents.IconButton(FontAwesomeIcon.Trash))
             _ = Plugin.Markers.RemoveMarker(marker.Id);
-        TooltipOnHover("Remove marker");
-    }
-
-    private static void TooltipOnHover(string text)
-    {
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip(text);
+        Tooltip.OnHover("Remove marker");
     }
 }

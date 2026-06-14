@@ -1,6 +1,7 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using RpUtils.UI.Components;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -51,11 +52,7 @@ internal class LobbiesWindow : Window
 
     private void DrawCreateButton()
     {
-        const string label = "Create Lobby";
-        var width = ImGui.CalcTextSize(label).X + ImGui.GetStyle().FramePadding.X * 2;
-        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - width) * 0.5f);
-
-        if (ImGui.Button(label))
+        if (CenteredButton.Draw("Create Lobby"))
         {
             Plugin.Lobbies.CreateLobby();
         }
@@ -65,8 +62,8 @@ internal class LobbiesWindow : Window
     {
         var style = ImGui.GetStyle();
         const float inputWidth = 120f;
-        var width = inputWidth + style.ItemSpacing.X + ImGui.CalcTextSize("Join").X + style.FramePadding.X * 2;
-        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - width) * 0.5f);
+        var groupWidth = inputWidth + style.ItemSpacing.X + ImGui.CalcTextSize("Join").X + style.FramePadding.X * 2;
+        Layout.CenterCursorX(groupWidth);
 
         ImGui.SetNextItemWidth(inputWidth);
         ImGui.InputTextWithHint("##JoinCode", "Enter code...", ref _joinCode, 6);

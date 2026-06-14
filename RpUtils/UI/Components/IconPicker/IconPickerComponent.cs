@@ -1,7 +1,10 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace RpUtils.UI.Components.IconPicker;
@@ -12,6 +15,8 @@ public sealed class IconPickerComponent
 
     private const float GridHeight = 280f;
     private const float JumpComboWidth = 180f;
+    private const float JumpInputWidth = 90f;
+    private const int FavoritesVisibleRows = 3;
 
     private static readonly Vector2 PreviewSize = new(32, 32);
     private static readonly Vector2 GridIconSize = new(32, 32);
@@ -39,10 +44,13 @@ public sealed class IconPickerComponent
 
     public uint SelectedIconId { get; set; } = DefaultIconId;
 
+    private int _jumpToInput;
+
     public void Draw()
     {
         DrawPreview();
         ImGui.Spacing();
+        DrawFavorites();
         var jumpTo = DrawJumpTo();
         DrawGrid(jumpTo);
     }
@@ -53,24 +61,76 @@ public sealed class IconPickerComponent
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         ImGui.TextDisabled($"#{SelectedIconId}");
+
+        ImGui.SameLine();
+        DrawFavoriteToggle();
+
         ImGui.SameLine();
         if (ImGui.SmallButton("Reset"))
             SelectedIconId = DefaultIconId;
     }
 
+    private void DrawFavoriteToggle()
+    {
+        var isFavorite = IconFavorites.IsFavorite(SelectedIconId);
+        using (ImRaii.PushColor(ImGuiCol.Text, isFavorite ? Theme.GoldColor : Theme.GrayColor))
+        {
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Star))
+                IconFavorites.Toggle(SelectedIconId);
+        }
+        Tooltip.OnHover(isFavorite ? "Remove from favorites" : "Add to favorites");
+    }
+
+    private void DrawFavorites()
+    {
+        if (!ImGui.CollapsingHeader($"Favorites ({IconFavorites.Count})###IconFavorites"))
+            return;
+
+        if (IconFavorites.Count == 0)
+        {
+            ImGui.TextDisabled("Star an icon to add it here.");
+            return;
+        }
+
+        var style = ImGui.GetStyle();
+        var childHeight = RowHeight() * FavoritesVisibleRows + style.WindowPadding.Y * 2;
+        using var child = ImRaii.Child("##Favorites", new Vector2(0, childHeight), true);
+        if (!child.Success) return;
+
+        var favorites = IconFavorites.All.ToArray();
+        var columns = ComputeColumns();
+        var rowCount = (favorites.Length + columns - 1) / columns;
+        for (var row = 0; row < rowCount; row++)
+            DrawIconRow(favorites, row * columns, columns);
+    }
+
     private uint? DrawJumpTo()
     {
         using var disabled = ImRaii.Disabled(!GameIconIndex.IsReady);
-        ImGui.SetNextItemWidth(JumpComboWidth);
-        if (!ImGui.BeginCombo("##JumpTo", "Jump to…")) return null;
 
         uint? selected = null;
-        foreach (var (label, iconId) in JumpTargets)
+
+        ImGui.SetNextItemWidth(JumpComboWidth);
+        if (ImGui.BeginCombo("##JumpTo", "Jump to…"))
         {
-            if (ImGui.Selectable($"{label}  ({iconId})"))
-                selected = iconId;
+            foreach (var (label, iconId) in JumpTargets)
+            {
+                if (ImGui.Selectable($"{label}  ({iconId})"))
+                    selected = iconId;
+            }
+            ImGui.EndCombo();
         }
-        ImGui.EndCombo();
+
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(JumpInputWidth);
+        ImGui.InputInt("##JumpToInput", ref _jumpToInput, 0, 0);
+        if (ImGui.IsItemDeactivatedAfterEdit())
+        {
+            if (_jumpToInput < 0) _jumpToInput = 0;
+            selected = (uint)_jumpToInput;
+        }
+        Tooltip.OnHover("Type an icon # and press Enter to jump");
+
         return selected;
     }
 
@@ -84,19 +144,24 @@ public sealed class IconPickerComponent
         var icons = GameIconIndex.Icons;
         if (icons.Count == 0) { ImGui.TextDisabled("No icons found."); return; }
 
-        var (columns, rowHeight, rowCount) = ComputeGridLayout(icons.Count);
+        var columns = ComputeColumns();
+        var rowHeight = RowHeight();
+        var rowCount = (icons.Count + columns - 1) / columns;
         ApplyJumpScroll(jumpTo, columns, rowHeight);
         DrawClippedGrid(icons, columns, rowHeight, rowCount);
     }
 
-    private static (int columns, float rowHeight, int rowCount) ComputeGridLayout(int itemCount)
+    private static int ComputeColumns()
     {
         var style = ImGui.GetStyle();
         var cellWidth = GridIconSize.X + style.FramePadding.X * 2 + style.ItemSpacing.X;
-        var rowHeight = GridIconSize.Y + style.FramePadding.Y * 2 + style.ItemSpacing.Y;
-        var columns = Math.Max(1, (int)MathF.Floor(ImGui.GetContentRegionAvail().X / cellWidth));
-        var rowCount = (itemCount + columns - 1) / columns;
-        return (columns, rowHeight, rowCount);
+        return Math.Max(1, (int)MathF.Floor(ImGui.GetContentRegionAvail().X / cellWidth));
+    }
+
+    private static float RowHeight()
+    {
+        var style = ImGui.GetStyle();
+        return GridIconSize.Y + style.FramePadding.Y * 2 + style.ItemSpacing.Y;
     }
 
     private static void ApplyJumpScroll(uint? jumpTo, int columns, float rowHeight)
@@ -112,22 +177,23 @@ public sealed class IconPickerComponent
         var clipper = new ImGuiListClipper();
         clipper.Begin(rowCount, rowHeight);
         while (clipper.Step())
-        {
             for (var row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
-            {
-                for (var col = 0; col < columns; col++)
-                {
-                    var idx = row * columns + col;
-                    if (idx >= icons.Count) break;
-                    if (col > 0) ImGui.SameLine();
-                    DrawGridIcon(icons[idx]);
-                }
-            }
-        }
+                DrawIconRow(icons, row * columns, columns);
         clipper.End();
     }
 
-    private void DrawGridIcon(uint iconId)
+    private void DrawIconRow(IReadOnlyList<uint> icons, int rowStart, int columns)
+    {
+        for (var col = 0; col < columns; col++)
+        {
+            var idx = rowStart + col;
+            if (idx >= icons.Count) break;
+            if (col > 0) ImGui.SameLine();
+            DrawIconCell(icons[idx]);
+        }
+    }
+
+    private void DrawIconCell(uint iconId)
     {
         var selected = iconId == SelectedIconId;
 
@@ -135,9 +201,19 @@ public sealed class IconPickerComponent
         using var hoverColor = ImRaii.PushColor(ImGuiCol.ButtonHovered, SelectedHoverColor, selected);
         using var id         = ImRaii.PushId((int)iconId);
 
-        var clicked = IconDisplay.DrawButton(iconId, GridIconSize);
+        if (IconDisplay.DrawButton(iconId, GridIconSize))
+            SelectedIconId = iconId;
 
-        if (clicked) SelectedIconId = iconId;
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip(iconId.ToString());
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+            IconFavorites.Toggle(iconId);
+
+        DrawCellTooltip(iconId);
+    }
+
+    private static void DrawCellTooltip(uint iconId)
+    {
+        if (!ImGui.IsItemHovered()) return;
+        var verb = IconFavorites.IsFavorite(iconId) ? "unfavorite" : "favorite";
+        ImGui.SetTooltip($"#{iconId}\nRight-click to {verb}");
     }
 }

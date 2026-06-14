@@ -1,5 +1,4 @@
-﻿using Dalamud.Interface.ImGuiNotification;
-using Dalamud.Plugin.Services;
+﻿using Dalamud.Plugin.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using RpUtils.Models;
@@ -15,8 +14,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
     private readonly CancellationTokenSource _cts = new();
 
     public event Action<HubConnection>? OnConnected;
-    public event Action? OnDisconnected;
-    public event Action<Exception?>? OnReconnecting;
 
     public ConnectionState Status { get; private set; } = ConnectionState.Disconnected;
     public event Action<ConnectionState>? OnStatusChanged;
@@ -58,8 +55,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
             else
                 Plugin.Log.Info("RpUtils connection closed.");
             SetStatus(ConnectionState.Disconnected);
-
-            OnDisconnected?.Invoke();
             return Task.CompletedTask;
         };
 
@@ -67,7 +62,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         {
             Plugin.Log.Warning(ex, "RpUtils connection lost, attempting to reconnect...");
             SetStatus(ConnectionState.Reconnecting);
-            OnReconnecting?.Invoke(ex);
             return Task.CompletedTask;
         };
 
@@ -75,7 +69,6 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         {
             Plugin.Log.Info("Reconnected to RpUtils server.");
             SetStatus(ConnectionState.Connected);
-            OnConnected?.Invoke(_connection);
             return Task.CompletedTask;
         };
 
@@ -83,11 +76,7 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         {
             Plugin.Log.Warning($"RpUtils requires update: {message}");
 
-            Plugin.NotificationManager.AddNotification(new Notification
-            {
-                Content = $"Please update RpUtils: {message}",
-                Type = NotificationType.Error,
-            });
+            Notify.Error($"Please update RpUtils: {message}");
 
             // Disconnect — we can't operate with a mismatched version
             Task.Run(async () => await DisconnectAsync());

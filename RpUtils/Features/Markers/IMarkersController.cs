@@ -7,14 +7,14 @@ namespace RpUtils.Features.Markers;
 
 public interface IMarkersController
 {
-    IReadOnlyDictionary<Guid, Marker> Markers { get; }
+    IReadOnlyDictionary<string, Marker> Markers { get; }
     Marker? PlacingMarker { get; }
 
     event Action? OnStateChanged;
 
     Task AddMarker(string lobbyId, uint iconId);
     Task UpdateMarker(Marker marker);
-    Task RemoveMarker(Guid id);
+    Task RemoveMarker(string id);
     Task RefreshMarkers(string lobbyId);
 
     void BeginPlacement(Marker marker);

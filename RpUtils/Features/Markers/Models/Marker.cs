@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 
@@ -6,7 +5,7 @@ namespace RpUtils.Features.Markers.Models;
 
 public class Marker
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string LobbyId { get; set; } = string.Empty;
     public uint TerritoryType { get; set; }
     public float PosX { get; set; }
@@ -18,6 +17,8 @@ public class Marker
     public bool IsVisible { get; set; } = false;
     public float Size { get; set; } = 1f;
     public uint Color { get; set; } = 0xFFFFFFFFu;
+
+    public string? NpcParticipantId { get; set; }
 
     [JsonIgnore]
     public Vector3 WorldPos

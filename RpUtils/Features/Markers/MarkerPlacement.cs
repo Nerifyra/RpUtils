@@ -1,5 +1,6 @@
 using Dalamud.Bindings.ImGui;
 using RpUtils.Features.Markers.Models;
+using RpUtils.Services;
 using System;
 using System.Runtime.InteropServices;
 
@@ -51,7 +52,7 @@ internal sealed class MarkerPlacement : IDisposable
             return;
         }
 
-        if (leftDown && !_prevLeftDown) Commit(placingMarker);
+        if (leftDown && !_prevLeftDown && !ImGui.GetIO().WantCaptureMouse) Commit(placingMarker);
         else if ((rightDown && !_prevRightDown) || (escDown && !_prevEscDown))
             Plugin.Markers.CancelPlacement();
 
@@ -62,7 +63,11 @@ internal sealed class MarkerPlacement : IDisposable
 
     private static void Commit(Marker marker)
     {
-        if (!Plugin.GameGui.ScreenToWorld(ImGui.GetMousePos(), out var worldPos)) return;
+        if (!Plugin.GameGui.ScreenToWorld(ImGui.GetMousePos(), out var worldPos))
+        {
+            Notify.Error("Unable to place marker at target location");
+            return;
+        }
         marker.WorldPos = worldPos;
         marker.TerritoryType = Plugin.ClientState.TerritoryType;
         marker.IsPlaced = true;

@@ -12,7 +12,7 @@ public sealed class MarkersService
     private readonly HubConnectionService _hub;
 
     public event Action<Marker>? OnMarkerUpdated;
-    public event Action<Guid>? OnMarkerRemoved;
+    public event Action<string>? OnMarkerRemoved;
 
     public MarkersService(HubConnectionService hub)
     {
@@ -21,7 +21,7 @@ public sealed class MarkersService
         _hub.OnConnected += connection =>
         {
             connection.On<Marker>("MarkerUpdated", marker => OnMarkerUpdated?.Invoke(marker));
-            connection.On<Guid>("MarkerRemoved", id => OnMarkerRemoved?.Invoke(id));
+            connection.On<string>("MarkerRemoved", id => OnMarkerRemoved?.Invoke(id));
         };
     }
 
@@ -40,7 +40,7 @@ public sealed class MarkersService
         }
     }
 
-    public async Task<bool> RemoveMarker(Guid markerId)
+    public async Task<bool> RemoveMarker(string markerId)
     {
         try
         {

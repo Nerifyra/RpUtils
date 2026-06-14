@@ -1,5 +1,6 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Encounters.Models;
+using RpUtils.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,37 @@ public sealed class EncountersController : IEncountersController, IDisposable
 
         _service.OnEncounterStateUpdated += OnEncounterStateUpdated;
         _service.OnEncounterEnded += OnEncounterEnded;
+        Plugin.Lobbies.OnLobbyEntered += OnLobbyEntered;
+        Plugin.Lobbies.OnLobbyRemoved += OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
+    }
+
+    private void OnLobbyEntered(string lobbyId) => _ = RefreshEncounters(lobbyId);
+
+    private void OnLobbyRemoved(string lobbyId)
+    {
+        foreach (var id in _encounters.Keys.Where(id => _encounters[id].LobbyId == lobbyId).ToList())
+            _encounters.Remove(id);
+        OnStateChanged?.Invoke();
+    }
+
+    private void OnConnectionStateChanged(ConnectionState state)
+    {
+        if (state == ConnectionState.Connected)
+        {
+            foreach (var lobbyId in Plugin.Lobbies.Lobbies.Keys)
+                _ = RefreshEncounters(lobbyId);
+        }
+        else if (state is ConnectionState.Disconnected or ConnectionState.Disabled)
+        {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        _encounters.Clear();
+        OnStateChanged?.Invoke();
     }
 
     private void OnEncounterStateUpdated(EncounterState state)
@@ -62,6 +94,10 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var nowOnDeck = IsLocalPlayerOnDeck(current, lobby.PlayerId);
         if (!nowOnDeck) return false;
 
+        // If we're in a 2 person encounter, we don't want to spam them with on deck notifications
+        var wasCurrent = previous.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        if (wasCurrent) return false;
+
         var wasOnDeck = IsLocalPlayerOnDeck(previous, lobby.PlayerId);
         return !wasOnDeck;
     }
@@ -90,7 +126,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpdateEncounter(lobbyId, null, name, playerIds);
         if (!success)
         {
-            ShowError("Failed to create encounter.");
+            Notify.Error("Failed to create encounter.");
         }
     }
 
@@ -99,7 +135,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpdateEncounter(lobbyId, encounterId, name, playerIds);
         if (!success)
         {
-            ShowError("Failed to update encounter.");
+            Notify.Error("Failed to update encounter.");
         }
     }
 
@@ -108,7 +144,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.ReverseTurn(encounterId);
         if (!success)
         {
-            ShowError("Failed to reverse turn.");
+            Notify.Error("Failed to reverse turn.");
         }
     }
 
@@ -117,7 +153,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.AdvanceTurn(encounterId);
         if (!success)
         {
-            ShowError("Failed to advance turn.");
+            Notify.Error("Failed to advance turn.");
         }
     }
 
@@ -126,16 +162,16 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.SetInitiative(encounterId, participantId, value);
         if (!success)
         {
-            ShowError("Failed to set initiative.");
+            Notify.Error("Failed to set initiative.");
         }
     }
 
-    public async Task AddNpcParticipant(string encounterId, string displayName)
+    public async Task UpsertNpc(string encounterId, UpsertNpcRequest request)
     {
-        var success = await _service.AddNpcParticipant(encounterId, displayName);
+        var success = await _service.UpsertNpc(encounterId, request);
         if (!success)
         {
-            ShowError("Failed to add NPC.");
+            Notify.Error("Failed to update NPC.");
         }
     }
 
@@ -144,16 +180,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.RemoveNpcParticipant(encounterId, participantId);
         if (!success)
         {
-            ShowError("Failed to remove NPC.");
-        }
-    }
-
-    public async Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName)
-    {
-        var success = await _service.RenameNpcParticipant(encounterId, participantId, newDisplayName);
-        if (!success)
-        {
-            ShowError("Failed to rename NPC.");
+            Notify.Error("Failed to remove NPC.");
         }
     }
 
@@ -162,7 +189,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.EndEncounter(encounterId);
         if (!success)
         {
-            ShowError("Failed to end encounter.");
+            Notify.Error("Failed to end encounter.");
         }
     }
 
@@ -188,18 +215,12 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
-    }
-
     public void Dispose()
     {
         _service.OnEncounterStateUpdated -= OnEncounterStateUpdated;
         _service.OnEncounterEnded -= OnEncounterEnded;
+        Plugin.Lobbies.OnLobbyEntered -= OnLobbyEntered;
+        Plugin.Lobbies.OnLobbyRemoved -= OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
     }
 }

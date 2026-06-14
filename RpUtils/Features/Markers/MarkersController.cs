@@ -1,6 +1,7 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Markers.Models;
 using RpUtils.Features.Markers.Rendering;
+using RpUtils.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +14,9 @@ public sealed class MarkersController : IMarkersController, IDisposable
     private readonly MarkersService _service;
     private readonly MarkerRenderer _renderer;
     private readonly MarkerPlacement _placement;
-    private readonly Dictionary<Guid, Marker> _markers = [];
+    private readonly Dictionary<string, Marker> _markers = [];
 
-    public IReadOnlyDictionary<Guid, Marker> Markers => _markers;
+    public IReadOnlyDictionary<string, Marker> Markers => _markers;
     public Marker? PlacingMarker { get; private set; }
 
     public event Action? OnStateChanged;
@@ -30,9 +31,30 @@ public sealed class MarkersController : IMarkersController, IDisposable
         _service.OnMarkerRemoved += OnMarkerRemoved;
         Plugin.Lobbies.OnLobbyEntered += OnLobbyEntered;
         Plugin.Lobbies.OnLobbyRemoved += OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
     }
 
     private void OnLobbyEntered(string lobbyId) => _ = RefreshMarkers(lobbyId);
+
+    private void OnConnectionStateChanged(ConnectionState state)
+    {
+        if (state == ConnectionState.Connected)
+        {
+            foreach (var lobbyId in Plugin.Lobbies.Lobbies.Keys)
+                _ = RefreshMarkers(lobbyId);
+        }
+        else if (state is ConnectionState.Disconnected or ConnectionState.Disabled)
+        {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        CancelPlacement();
+        _markers.Clear();
+        OnStateChanged?.Invoke();
+    }
 
     private void OnLobbyRemoved(string lobbyId)
     {
@@ -50,7 +72,7 @@ public sealed class MarkersController : IMarkersController, IDisposable
         OnStateChanged?.Invoke();
     }
 
-    private void OnMarkerRemoved(Guid id)
+    private void OnMarkerRemoved(string id)
     {
         if (PlacingMarker?.Id == id) CancelPlacement();
         _markers.Remove(id);
@@ -61,24 +83,24 @@ public sealed class MarkersController : IMarkersController, IDisposable
     {
         var marker = new Marker
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.NewGuid().ToString(),
             LobbyId = lobbyId,
             IconId = iconId,
         };
         var success = await _service.UpdateMarker(marker);
-        if (!success) ShowError("Failed to add marker.");
+        if (!success) Notify.Error("Failed to add marker.");
     }
 
     public async Task UpdateMarker(Marker marker)
     {
         var success = await _service.UpdateMarker(marker);
-        if (!success) ShowError("Failed to update marker.");
+        if (!success) Notify.Error("Failed to update marker.");
     }
 
-    public async Task RemoveMarker(Guid id)
+    public async Task RemoveMarker(string id)
     {
         var success = await _service.RemoveMarker(id);
-        if (!success) ShowError("Failed to remove marker.");
+        if (!success) Notify.Error("Failed to remove marker.");
     }
 
     public async Task RefreshMarkers(string lobbyId)
@@ -106,21 +128,13 @@ public sealed class MarkersController : IMarkersController, IDisposable
     public void BeginPlacement(Marker marker) => PlacingMarker = marker;
     public void CancelPlacement() => PlacingMarker = null;
 
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
-    }
-
     public void Dispose()
     {
         _service.OnMarkerUpdated -= OnMarkerUpdated;
         _service.OnMarkerRemoved -= OnMarkerRemoved;
         Plugin.Lobbies.OnLobbyEntered -= OnLobbyEntered;
         Plugin.Lobbies.OnLobbyRemoved -= OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
         _renderer.Dispose();
         _placement.Dispose();
     }

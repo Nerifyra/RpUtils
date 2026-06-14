@@ -5,6 +5,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using RpUtils.Features.Sonar.Models;
+using RpUtils.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -67,12 +68,12 @@ public sealed class SonarController : ISonarController, IDisposable
         Plugin.Framework.Update += OnFrameworkUpdate;
         Plugin.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, "AreaMap", OnMapOpened);
 
-        _sonarService.OnReconnected += OnReconnected;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
     }
 
-    private void OnReconnected()
+    private void OnConnectionStateChanged(ConnectionState state)
     {
-        if (IsSharingLocation)
+        if (state == ConnectionState.Connected && IsSharingLocation)
         {
             _lastWorld = 0;
             _lastMap = string.Empty;
@@ -365,7 +366,7 @@ public sealed class SonarController : ISonarController, IDisposable
     {
         Plugin.Framework.Update -= OnFrameworkUpdate;
         Plugin.AddonLifecycle.UnregisterListener(AddonEvent.PostRefresh, "AreaMap", OnMapOpened);
-        _sonarService.OnReconnected -= OnReconnected;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
 
         if (IsSharingLocation)
         {
