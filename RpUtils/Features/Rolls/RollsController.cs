@@ -1,5 +1,5 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Rolls.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -27,13 +27,27 @@ public sealed class RollsController : IRollsController, IDisposable
 
     private void OnRollRequestStateUpdated(RollRequestState state)
     {
-        _rollRequests.TryGetValue(state.RollRequestId, out var previous);
-        var isNew = previous == null;
+        var isNew = !_rollRequests.TryGetValue(state.RollRequestId, out var previous);
 
         _rollRequests[state.RollRequestId] = state;
         OnStateChanged?.Invoke();
 
-        RollChatEcho.OnRollUpdate(state, isNew, previous);
+        if (isNew)
+        {
+            RollAlerts.AlertRollRequested(state);
+            return;
+        }
+
+        if (IsJustCompleted(previous!, state))
+            RollAlerts.AlertRollCompleted(state);
+    }
+
+    private static bool IsJustCompleted(RollRequestState previous, RollRequestState current)
+    {
+        var wasAllResolved = previous.Participants.All(p => !p.IsPending);
+        var isAllResolved = current.Participants.All(p => !p.IsPending);
+        var justEnded = previous.IsActive && !current.IsActive;
+        return (isAllResolved && !wasAllResolved) || justEnded;
     }
 
     private void OnRollRequestClosedHandler(string rollRequestId)
@@ -45,27 +59,13 @@ public sealed class RollsController : IRollsController, IDisposable
     public async Task CreateRollRequest(string encounterId, string name, int? dc, bool isInitiativeRoll, List<string> participantIds)
     {
         var success = await _service.CreateRollRequest(encounterId, name, dc, isInitiativeRoll, participantIds);
-        if (!success)
-        {
-            Plugin.NotificationManager.AddNotification(new Notification
-            {
-                Content = "Failed to create roll request.",
-                Type = NotificationType.Error,
-            });
-        }
+        if (!success) Notify.Error("Failed to create roll request.");
     }
 
     public async Task SubmitRoll(string rollRequestId, string participantId, int value)
     {
         var success = await _service.SubmitRoll(rollRequestId, participantId, value);
-        if (!success)
-        {
-            Plugin.NotificationManager.AddNotification(new Notification
-            {
-                Content = "Failed to submit roll.",
-                Type = NotificationType.Error,
-            });
-        }
+        if (!success) Notify.Error("Failed to submit roll.");
     }
 
     public async Task EndRollRequest(string rollRequestId)

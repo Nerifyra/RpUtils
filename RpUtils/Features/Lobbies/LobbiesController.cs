@@ -1,7 +1,9 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RpUtils.Features.Lobbies;
@@ -27,6 +29,21 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         _service.OnLobbyStateUpdated += OnLobbyStateUpdated;
         _service.OnLobbyClosed += OnLobbyClosed;
         _service.OnKickedFromLobby += OnKickedFromLobby;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
+    }
+
+    private void OnConnectionStateChanged(ConnectionState state)
+    {
+        if (state == ConnectionState.Connected)
+            _ = RefreshLobbies();
+        else if (state is ConnectionState.Disconnected or ConnectionState.Disabled)
+            Clear();
+    }
+
+    private void Clear()
+    {
+        _lobbies.Clear();
+        OnStateChanged?.Invoke();
     }
 
     private void OnLobbyStateUpdated(LobbyState state)
@@ -59,7 +76,7 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         var result = await _service.CreateLobby(characterName);
         if (result is null)
         {
-            ShowError("Failed to create lobby.");
+            Notify.Error("Failed to create lobby.");
             return;
         }
 
@@ -74,7 +91,7 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         var result = await _service.JoinLobby(joinCode, characterName);
         if (result is null)
         {
-            ShowError("Failed to join lobby.");
+            Notify.Error("Failed to join lobby.");
             return;
         }
 
@@ -163,10 +180,17 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
             var lobbies = await _service.GetMyLobbies();
             if (lobbies is not null)
             {
-                _lobbies.Clear();
+                var newIds = lobbies.Select(l => l.LobbyId).ToHashSet();
+                foreach (var goneId in _lobbies.Keys.Where(id => !newIds.Contains(id)).ToList())
+                {
+                    _lobbies.Remove(goneId);
+                    OnLobbyRemoved?.Invoke(goneId);
+                }
                 foreach (var lobby in lobbies)
                 {
+                    var isNew = !_lobbies.ContainsKey(lobby.LobbyId);
                     _lobbies[lobby.LobbyId] = lobby;
+                    if (isNew) OnLobbyEntered?.Invoke(lobby.LobbyId);
                 }
             }
         }
@@ -199,17 +223,8 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         if (localPlayer is null) return "Unknown";
 
         var name = localPlayer.Name.ToString();
-        var world = Plugin.PlayerState.CurrentWorld.Value.Name.ToString();
+        var world = Plugin.PlayerState.HomeWorld.Value.Name.ToString();
         return $"{name}@{world}";
-    }
-
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
     }
 
     public void Dispose()
@@ -217,5 +232,6 @@ public sealed class LobbiesController : ILobbiesController, IDisposable
         _service.OnLobbyStateUpdated -= OnLobbyStateUpdated;
         _service.OnLobbyClosed -= OnLobbyClosed;
         _service.OnKickedFromLobby -= OnKickedFromLobby;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
     }
 }

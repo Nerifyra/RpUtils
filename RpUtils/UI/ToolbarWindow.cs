@@ -4,6 +4,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using RpUtils.Services;
 using RpUtils.UI;
 using RpUtils.UI.Components;
 using System;
@@ -42,12 +43,11 @@ internal class ToolbarWindow : Window
     {
         var sonar = Plugin.Sonar;
         var tiedToRoleplaying = Plugin.Configuration.LinkSonarSharingToRoleplayingStatus;
-        var action = sonar.IsSharingLocation ? "Stop" : "Start";
 
-        var header = tiedToRoleplaying ? "Sonar (controlled by /roleplaying status)" : "Sonar";
+        var header = tiedToRoleplaying ? "Sonar (linked to /roleplaying status)" : "Sonar";
         var primaryLine = tiedToRoleplaying
-            ? $"Use /roleplaying to {action.ToLowerInvariant()} sharing"
-            : $"Left click: {action} sharing location";
+            ? $"Left click: {(sonar.IsSharingLocation ? "Disable" : "Enable")} /roleplaying"
+            : $"Left click: {(sonar.IsSharingLocation ? "Stop" : "Start")} sharing location";
         var tooltip = $"{header}\n{primaryLine}\nRight click: Open location sharing window";
 
         if (sonar.IsSharingLocation && _rpIcon != null && _rpIcon.TryGetWrap(out var texture, out _))
@@ -59,9 +59,10 @@ internal class ToolbarWindow : Window
             ImGuiComponents.IconButton(FontAwesomeIcon.MapMarkerAlt);
         }
 
-        if (!tiedToRoleplaying && ImGui.IsItemClicked(ImGuiMouseButton.Left))
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
         {
-            sonar.ToggleSharing();
+            if (tiedToRoleplaying) ChatCommand.Send("/roleplaying");
+            else sonar.ToggleSharing();
         }
 
         if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
@@ -69,15 +70,22 @@ internal class ToolbarWindow : Window
             _toggleShareLocationWindow.Invoke();
         }
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(tooltip);
-        }
+        Tooltip.OnHover(tooltip);
     }
 
     public override bool DrawConditions()
     {
         return Plugin.ClientState.IsLoggedIn;
+    }
+
+    public override void OnOpen() => PersistToolbarVisibility(true);
+    public override void OnClose() => PersistToolbarVisibility(false);
+
+    private static void PersistToolbarVisibility(bool visible)
+    {
+        if (Plugin.Configuration.ShowToolbar == visible) return;
+        Plugin.Configuration.ShowToolbar = visible;
+        Plugin.Configuration.Save();
     }
 
     public override void Draw()

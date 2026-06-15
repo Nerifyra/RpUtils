@@ -1,5 +1,6 @@
-using Dalamud.Interface.ImGuiNotification;
 using RpUtils.Features.Encounters.Models;
+using RpUtils.Models;
+using RpUtils.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,12 +24,95 @@ public sealed class EncountersController : IEncountersController, IDisposable
 
         _service.OnEncounterStateUpdated += OnEncounterStateUpdated;
         _service.OnEncounterEnded += OnEncounterEnded;
+        Plugin.Lobbies.OnLobbyEntered += OnLobbyEntered;
+        Plugin.Lobbies.OnLobbyRemoved += OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged += OnConnectionStateChanged;
+    }
+
+    private void OnLobbyEntered(string lobbyId) => _ = RefreshEncounters(lobbyId);
+
+    private void OnLobbyRemoved(string lobbyId)
+    {
+        foreach (var id in _encounters.Keys.Where(id => _encounters[id].LobbyId == lobbyId).ToList())
+            _encounters.Remove(id);
+        OnStateChanged?.Invoke();
+    }
+
+    private void OnConnectionStateChanged(ConnectionState state)
+    {
+        if (state == ConnectionState.Connected)
+        {
+            foreach (var lobbyId in Plugin.Lobbies.Lobbies.Keys)
+                _ = RefreshEncounters(lobbyId);
+        }
+        else if (state is ConnectionState.Disconnected or ConnectionState.Disabled)
+        {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        _encounters.Clear();
+        OnStateChanged?.Invoke();
     }
 
     private void OnEncounterStateUpdated(EncounterState state)
     {
+        _encounters.TryGetValue(state.EncounterId, out var previous);
+
         _encounters[state.EncounterId] = state;
         OnStateChanged?.Invoke();
+
+        if (LocalPlayerTurnJustStarted(previous, state))
+            EncounterAlerts.AlertYourTurn(state);
+        else if (LocalPlayerOnDeckJustStarted(previous, state))
+            EncounterAlerts.AlertOnDeck(state);
+    }
+
+    private static bool LocalPlayerTurnJustStarted(EncounterState? previous, EncounterState current)
+    {
+        // Skip the first update we see for an encounter — we can't distinguish "turn just advanced
+        // to you" from "encounter was just created / you just joined and it happens to be your turn".
+        // Real turn transitions always have a previous state to diff against.
+        if (previous == null) return false;
+
+        if (!Plugin.Lobbies.Lobbies.TryGetValue(current.LobbyId, out var lobby)) return false;
+
+        var nowCurrent = current.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        if (!nowCurrent) return false;
+
+        var wasCurrent = previous.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        return !wasCurrent;
+    }
+
+    private static bool LocalPlayerOnDeckJustStarted(EncounterState? previous, EncounterState current)
+    {
+        if (previous == null) return false;
+        if (!Plugin.Lobbies.Lobbies.TryGetValue(current.LobbyId, out var lobby)) return false;
+
+        var nowOnDeck = IsLocalPlayerOnDeck(current, lobby.PlayerId);
+        if (!nowOnDeck) return false;
+
+        // If we're in a 2 person encounter, we don't want to spam them with on deck notifications
+        var wasCurrent = previous.Participants.Any(p => p.PlayerId == lobby.PlayerId && p.IsCurrent);
+        if (wasCurrent) return false;
+
+        var wasOnDeck = IsLocalPlayerOnDeck(previous, lobby.PlayerId);
+        return !wasOnDeck;
+    }
+
+    private static bool IsLocalPlayerOnDeck(EncounterState state, string localPlayerId)
+    {
+        // Participants are stored in turn order, so "on deck" is the slot after the current one
+        // (wrapping). Need at least two for "next" to mean something other than "current".
+        if (state.Participants.Count < 2) return false;
+
+        var currentIndex = state.Participants.FindIndex(p => p.IsCurrent);
+        if (currentIndex < 0) return false;
+
+        var nextIndex = (currentIndex + 1) % state.Participants.Count;
+        return state.Participants[nextIndex].PlayerId == localPlayerId;
     }
 
     private void OnEncounterEnded(string encounterId)
@@ -42,7 +126,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpdateEncounter(lobbyId, null, name, playerIds);
         if (!success)
         {
-            ShowError("Failed to create encounter.");
+            Notify.Error("Failed to create encounter.");
         }
     }
 
@@ -51,7 +135,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.UpdateEncounter(lobbyId, encounterId, name, playerIds);
         if (!success)
         {
-            ShowError("Failed to update encounter.");
+            Notify.Error("Failed to update encounter.");
         }
     }
 
@@ -60,7 +144,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.ReverseTurn(encounterId);
         if (!success)
         {
-            ShowError("Failed to reverse turn.");
+            Notify.Error("Failed to reverse turn.");
         }
     }
 
@@ -69,7 +153,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.AdvanceTurn(encounterId);
         if (!success)
         {
-            ShowError("Failed to advance turn.");
+            Notify.Error("Failed to advance turn.");
         }
     }
 
@@ -78,16 +162,16 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.SetInitiative(encounterId, participantId, value);
         if (!success)
         {
-            ShowError("Failed to set initiative.");
+            Notify.Error("Failed to set initiative.");
         }
     }
 
-    public async Task AddNpcParticipant(string encounterId, string displayName)
+    public async Task UpsertNpc(string encounterId, UpsertNpcRequest request)
     {
-        var success = await _service.AddNpcParticipant(encounterId, displayName);
+        var success = await _service.UpsertNpc(encounterId, request);
         if (!success)
         {
-            ShowError("Failed to add NPC.");
+            Notify.Error("Failed to update NPC.");
         }
     }
 
@@ -96,16 +180,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.RemoveNpcParticipant(encounterId, participantId);
         if (!success)
         {
-            ShowError("Failed to remove NPC.");
-        }
-    }
-
-    public async Task RenameNpcParticipant(string encounterId, string participantId, string newDisplayName)
-    {
-        var success = await _service.RenameNpcParticipant(encounterId, participantId, newDisplayName);
-        if (!success)
-        {
-            ShowError("Failed to rename NPC.");
+            Notify.Error("Failed to remove NPC.");
         }
     }
 
@@ -114,7 +189,7 @@ public sealed class EncountersController : IEncountersController, IDisposable
         var success = await _service.EndEncounter(encounterId);
         if (!success)
         {
-            ShowError("Failed to end encounter.");
+            Notify.Error("Failed to end encounter.");
         }
     }
 
@@ -140,18 +215,12 @@ public sealed class EncountersController : IEncountersController, IDisposable
         }
     }
 
-    private static void ShowError(string message)
-    {
-        Plugin.NotificationManager.AddNotification(new Notification
-        {
-            Content = message,
-            Type = NotificationType.Error,
-        });
-    }
-
     public void Dispose()
     {
         _service.OnEncounterStateUpdated -= OnEncounterStateUpdated;
         _service.OnEncounterEnded -= OnEncounterEnded;
+        Plugin.Lobbies.OnLobbyEntered -= OnLobbyEntered;
+        Plugin.Lobbies.OnLobbyRemoved -= OnLobbyRemoved;
+        Plugin.ConnectionStatus.OnStatusChanged -= OnConnectionStateChanged;
     }
 }

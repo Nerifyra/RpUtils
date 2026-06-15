@@ -37,11 +37,7 @@ public class ChangelogWindow : Window
             config.Save();
         }
 
-        // Centered close button
-        var buttonWidth = 120f;
-        var windowWidth = ImGui.GetWindowSize().X;
-        ImGui.SetCursorPosX((windowWidth - buttonWidth) / 2f);
-        if (ImGui.Button("Close", new Vector2(buttonWidth, 0)))
+        if (CenteredButton.Draw("Close", 120f))
         {
             IsOpen = false;
         }

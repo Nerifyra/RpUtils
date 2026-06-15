@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using RpUtils.Features.Lobbies.Models;
+using RpUtils.UI.Components;
 using System.Linq;
 
 namespace RpUtils.Features.Encounters.UI;
@@ -42,7 +43,11 @@ internal class EncountersTab
 
     private void DrawNoEncounters(Lobby lobby)
     {
-        if (!lobby.IsModeratorOrAbove) return;
+        if (!lobby.IsModeratorOrAbove)
+        {
+            ImGui.TextDisabled("No encounters yet.");
+            return;
+        }
 
         var buttonText = "Roll for initiative...";
         var buttonWidth = ImGui.CalcTextSize(buttonText).X + ImGui.GetStyle().FramePadding.X * 2;
@@ -55,10 +60,9 @@ internal class EncountersTab
         }
 
         var totalWidth = iconWidth + spacing + buttonWidth + spacing + iconWidth;
-        var availWidth = ImGui.GetContentRegionAvail().X;
         var availHeight = ImGui.GetContentRegionAvail().Y;
 
-        ImGui.SetCursorPosX((availWidth - totalWidth) * 0.5f);
+        Layout.CenterCursorX(totalWidth);
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + availHeight * 0.4f);
 
         using (ImRaii.PushFont(UiBuilder.IconFont))

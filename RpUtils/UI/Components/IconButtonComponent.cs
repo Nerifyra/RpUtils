@@ -21,9 +21,6 @@ public static class IconButtonComponent
             onRightClick.Invoke();
         }
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(tooltip);
-        }
+        Tooltip.OnHover(tooltip);
     }
 }
