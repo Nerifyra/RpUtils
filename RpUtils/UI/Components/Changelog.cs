@@ -45,11 +45,18 @@ public sealed class Changelog
         var builder = new ChangelogBuilder();
 
         // Add new versions at the top
+        AddVersion_0_8_0(builder);
         AddVersion_0_7_0(builder);
         AddVersion_0_5_1(builder);
         AddVersion_0_5_0(builder);
 
         return builder.Build();
+    }
+
+    private static void AddVersion_0_8_0(ChangelogBuilder builder)
+    {
+        builder.NextVersion("0.8.0")
+            .Important("Added /roll and /rollcheck commands");
     }
 
     private static void AddVersion_0_7_0(ChangelogBuilder builder)
