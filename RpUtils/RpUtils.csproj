@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
     <PluginVersion>0.7.0</PluginVersion>
-
   </PropertyGroup>
 
   <PropertyGroup>
@@ -40,16 +39,11 @@
     <PackageReference Include="Pictomancy" Version="1.0.8" />
   </ItemGroup>
 
-  
-
   <ItemGroup>
     <Content Include="RpUtils.yaml" />
   </ItemGroup>
 
-
-	
-	<ItemGroup>
+  <ItemGroup>
     <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
-
 </Project>
