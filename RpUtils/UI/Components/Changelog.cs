@@ -45,21 +45,21 @@ public sealed class Changelog
         var builder = new ChangelogBuilder();
 
         // Add new versions at the top
-        AddVersion_0_6_0(builder);
+        AddVersion_0_7_0(builder);
         AddVersion_0_5_1(builder);
         AddVersion_0_5_0(builder);
 
         return builder.Build();
     }
 
-    private static void AddVersion_0_6_0(ChangelogBuilder builder)
+    private static void AddVersion_0_7_0(ChangelogBuilder builder)
     {
-        builder.NextVersion("0.6.0")
+        builder.NextVersion("0.7.0")
             .Important("Custom Waymarks added")
                 .Detail("Custom waymarks are attached to a lobby.")
                 .Detail("They can use an icon and label.")
                 .Detail("Marker visibility for non DM lobby members can be toggled for hiding markers.")
-            .Minor("Creating/joining a lobby now uses proper character homeworld")
+            .Minor("Creating/joining a lobby now uses proper character homeworlda")
             .Minor("Toolbar window visibility persisted.")
             .Minor("Sonar button now toggles /roleplaying when linked.")
             .Minor("Updated configuration for alerts.")

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
-    <PluginVersion>0.6.0</PluginVersion>
+    <PluginVersion>0.7.0</PluginVersion>
+
   </PropertyGroup>
 
   <PropertyGroup>
@@ -45,9 +46,9 @@
     <Content Include="RpUtils.yaml" />
   </ItemGroup>
 
-  
 
-  <ItemGroup>
+	
+	<ItemGroup>
     <PackageReference Update="DotNet.ReproducibleBuilds" Version="2.0.2" />
   </ItemGroup>
 
