@@ -59,7 +59,7 @@ public sealed class Changelog
                 .Detail("Custom waymarks are attached to a lobby.")
                 .Detail("They can use an icon and label.")
                 .Detail("Marker visibility for non DM lobby members can be toggled for hiding markers.")
-            .Minor("Creating/joining a lobby now uses proper character homeworlda")
+            .Minor("Creating/joining a lobby now uses proper character homeworld")
             .Minor("Toolbar window visibility persisted.")
             .Minor("Sonar button now toggles /roleplaying when linked.")
             .Minor("Updated configuration for alerts.")
