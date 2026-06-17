@@ -18,7 +18,7 @@ internal static class EncounterAlerts
     private static void EchoYourTurn(EncounterState state)
     {
         var encounterName = string.IsNullOrWhiteSpace(state.Name) ? "the encounter" : state.Name;
-        ChatEcho.Send($"It's your turn in {encounterName}!");
+        Chat.Echo($"It's your turn in {encounterName}!");
     }
 
     private static void PlaySoundYourTurn()
@@ -38,7 +38,7 @@ internal static class EncounterAlerts
     private static void EchoOnDeck(EncounterState state)
     {
         var encounterName = string.IsNullOrWhiteSpace(state.Name) ? "the encounter" : state.Name;
-        ChatEcho.Send($"You're next in {encounterName}.");
+        Chat.Echo($"You're next in {encounterName}.");
     }
 
     private static void PlaySoundOnDeck()

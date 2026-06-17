@@ -61,7 +61,7 @@ internal class ToolbarWindow : Window
 
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
         {
-            if (tiedToRoleplaying) ChatCommand.Send("/roleplaying");
+            if (tiedToRoleplaying) Chat.SendCommand("/roleplaying");
             else sonar.ToggleSharing();
         }
 

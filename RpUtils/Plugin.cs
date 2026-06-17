@@ -40,6 +40,8 @@ public sealed class Plugin : IDalamudPlugin
     internal static UIManager UI { get; private set; } = null!;
 
     private const string CommandName = "/rputils";
+    private const string RollCommandName = "/roll";
+    private const string RollCheckCommandName = "/rollcheck";
 
     private readonly PctContext _pictomancy;
     private readonly HubConnectionService _hub;
@@ -96,6 +98,15 @@ public sealed class Plugin : IDalamudPlugin
             HelpMessage = "Toggle the display of the Rp Utils toolbar."
         });
 
+        CommandManager.AddHandler(RollCommandName, new CommandInfo(OnRollCommand)
+        {
+            HelpMessage = "Roll dice, e.g. /roll 3d8+5"
+        });
+        CommandManager.AddHandler(RollCheckCommandName, new CommandInfo(OnRollCheckCommand)
+        {
+            HelpMessage = "Verify a roll is genuine by id, e.g. /rollcheck 123456789"
+        });
+
         PluginInterface.UiBuilder.Draw += UI.Draw;
         PluginInterface.UiBuilder.OpenConfigUi += UI.ToggleConfigWindow;
         PluginInterface.UiBuilder.OpenMainUi += UI.ToggleToolbarWindow;
@@ -110,6 +121,8 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenMainUi -= UI.ToggleToolbarWindow;
 
         CommandManager.RemoveHandler(CommandName);
+        CommandManager.RemoveHandler(RollCommandName);
+        CommandManager.RemoveHandler(RollCheckCommandName);
 
         UI.Dispose();
         _chatRollListener.Dispose();
@@ -126,5 +139,17 @@ public sealed class Plugin : IDalamudPlugin
     {
         Log.Debug($"OnCommand {command}: {args}");
         UI.ToggleToolbarWindow();
+    }
+
+    private void OnRollCommand(string command, string args)
+    {
+        Log.Debug($"OnRollCommand {command}: {args}");
+        Rolls.GenerateRoll(args);
+    }
+
+    private void OnRollCheckCommand(string command, string args)
+    {
+        Log.Debug($"OnRollCheckCommand {command}: {args}");
+        Rolls.RollCheck(args);
     }
 }

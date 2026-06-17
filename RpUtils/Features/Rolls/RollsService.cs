@@ -98,4 +98,32 @@ public sealed class RollsService
             return null;
         }
     }
+
+    public async Task<GeneratedRoll?> GenerateRoll(string args)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return null;
+            return await _hub.Connection!.InvokeAsync<GeneratedRoll>("GenerateRoll", args);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to generate roll.");
+            return null;
+        }
+    }
+
+    public async Task<GeneratedRoll?> RollCheck(string args)
+    {
+        try
+        {
+            if (!_hub.IsConnected) return null;
+            return await _hub.Connection!.InvokeAsync<GeneratedRoll?>("RollCheck", args);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, "Failed to check roll.");
+            return null;
+        }
+    }
 }
