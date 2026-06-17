@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading.Tasks;
 
 namespace RpUtils.Features.Rolls;
@@ -111,5 +112,52 @@ public sealed class RollsController : IRollsController, IDisposable
         _service.OnRollRequestStateUpdated -= OnRollRequestStateUpdated;
         _service.OnRollRequestClosed -= OnRollRequestClosedHandler;
     }
+
+
+    public async void GenerateRoll(string args)
+    {
+        if (!Chat.CurrentChannelCanMessage())
+        {
+            Notify.Warning("Current channel disallowed from rolling.");
+            return;
+        }
+
+        var roll = await _service.GenerateRoll(args);
+        if (roll == null)
+        {
+            Notify.Warning($"Roll '{args}' could not produce a result.");
+            return;
+        }
+
+        // Keep the public line short — the breakdown can get long, so it's left to /rollcheck.
+        var message = $"({roll.Id}): {roll.Expression} = {roll.Result}";
+
+        // Chat touches game memory, so it must run on the framework thread (we're off it after the await).
+        await Plugin.Framework.RunOnFrameworkThread(() =>
+        {
+            if (Chat.SendMessage(message))
+                return;
+
+            // Channel changed during the round-trip — keep the result local so the roll isn't lost.
+            EchoRoll(roll);
+            Notify.Warning("Current channel disallowed from rolling.");
+        });
+    }
+
+    public async void RollCheck(string args)
+    {
+        var roll = await _service.RollCheck(args);
+        if (roll == null)
+        {
+            Chat.Echo($"No roll found for '{args}'. Usage: `/rollcheck ######`");
+            return;
+        }
+
+        EchoRoll(roll);
+    }
+
+    // Local echo with the full breakdown — used by /rollcheck and the barred-channel fallback.
+    private static void EchoRoll(GeneratedRoll roll) =>
+        Chat.Echo($"{roll.Id}: {roll.Expression} → {roll.Breakdown} = {roll.Result}");
 
 }

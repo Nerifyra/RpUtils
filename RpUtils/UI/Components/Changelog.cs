@@ -45,11 +45,20 @@ public sealed class Changelog
         var builder = new ChangelogBuilder();
 
         // Add new versions at the top
+        AddVersion_0_7_1(builder);
         AddVersion_0_7_0(builder);
         AddVersion_0_5_1(builder);
         AddVersion_0_5_0(builder);
 
         return builder.Build();
+    }
+
+    private static void AddVersion_0_7_1(ChangelogBuilder builder)
+    {
+        builder.NextVersion("0.7.1")
+            .Important("Added /roll and /rollcheck commands")
+                .Detail("`/roll` allows more complex rolls with modifiers. e.g. `/roll 2d6+3` or `/roll 1d20-1`.")
+                .Detail("`/roll` results return with a code that can be used to verify the result with `/rollcheck`, e.g. `/rollcheck 123456`.");
     }
 
     private static void AddVersion_0_7_0(ChangelogBuilder builder)

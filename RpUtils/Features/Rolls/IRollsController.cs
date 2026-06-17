@@ -17,4 +17,6 @@ public interface IRollsController
     Task CloseRollRequest(string rollRequestId);
     Task RefreshEncounterRolls(string encounterId);
     List<RollRequestState> GetRollsForEncounter(string encounterId);
+    void GenerateRoll(string args);
+    void RollCheck(string args);
 }

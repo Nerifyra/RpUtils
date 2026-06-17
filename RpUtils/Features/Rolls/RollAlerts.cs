@@ -28,13 +28,13 @@ internal static class RollAlerts
 
         if (state.IsInitiativeRoll)
         {
-            ChatEcho.Send($"Roll for initiative! Please roll in a channel visible to {dmName}.");
+            Chat.Echo($"Roll for initiative! Please roll in a channel visible to {dmName}.");
             return;
         }
 
         var participantNames = string.Join(", ", state.Participants.Select(p => p.DisplayName));
         var dcText = state.DC.HasValue ? $"DC {state.DC.Value} " : "";
-        ChatEcho.Send($"{dmName} has requested a {dcText}roll from {participantNames}. Please roll in a channel visible to {dmName}.");
+        Chat.Echo($"{dmName} has requested a {dcText}roll from {participantNames}. Please roll in a channel visible to {dmName}.");
     }
 
     private static void PlaySoundRollRequested()
@@ -67,7 +67,7 @@ internal static class RollAlerts
         if (state.DC.HasValue)
             EchoDcRollCompleted(rollLabel, state.DC.Value, resolved);
         else
-            ChatEcho.Send($"{rollLabel} completed. {FormatResults(resolved)}");
+            Chat.Echo($"{rollLabel} completed. {FormatResults(resolved)}");
     }
 
     private static void PlaySoundRollCompleted()
@@ -97,7 +97,7 @@ internal static class RollAlerts
             body.AddText(" failed.");
         }
 
-        ChatEcho.Send(body.Build());
+        Chat.Echo(body.Build());
     }
 
     private static void EchoInitiativeCompleted(List<RollParticipant> resolved)
@@ -118,7 +118,7 @@ internal static class RollAlerts
             body.AddText($" ({turnOrder[i].Result})");
         }
 
-        ChatEcho.Send(body.Build());
+        Chat.Echo(body.Build());
     }
 
     private static void AppendColoredResults(SeStringBuilder body, ushort color, List<RollParticipant> participants)

@@ -10,4 +10,11 @@ internal static class Notify
             Content = message,
             Type = NotificationType.Error,
         });
+
+    public static void Warning(string message) =>
+        Plugin.NotificationManager.AddNotification(new Notification
+        {
+            Content = message,
+            Type = NotificationType.Warning,
+        });
 }
