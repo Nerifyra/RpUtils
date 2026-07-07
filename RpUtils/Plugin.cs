@@ -104,7 +104,7 @@ public sealed class Plugin : IDalamudPlugin
         });
         CommandManager.AddHandler(RollCheckCommandName, new CommandInfo(OnRollCheckCommand)
         {
-            HelpMessage = "Verify a roll is genuine by id, e.g. /rollcheck 123456789"
+            HelpMessage = "Verify a roll is genuine by id, e.g. /rollcheck K7M2QF"
         });
 
         PluginInterface.UiBuilder.Draw += UI.Draw;

@@ -123,9 +123,9 @@ public sealed class RollsController : IRollsController, IDisposable
         }
 
         var result = await _service.GenerateRoll(args);
-        if (result.Value is not { } roll)
+        if (!result.Success || result.Value is not { } roll)
         {
-            Chat.Echo(result.Error ?? "Couldn't roll.");
+            Chat.Echo(result.Error ?? "Unable to generate roll.");
             return;
         }
 
@@ -146,14 +146,14 @@ public sealed class RollsController : IRollsController, IDisposable
 
     public async void RollCheck(string args)
     {
-        var roll = await _service.RollCheck(args);
-        if (roll == null)
+        var result = await _service.RollCheck(args);
+        if (!result.Success || result.Value is not { } roll)
         {
-            Chat.Echo($"No roll found for '{args}'. Usage: `/rollcheck ######`");
+            Chat.Echo(result.Error ?? "Unable to check roll.");
             return;
         }
 
-        EchoRoll(roll);
+        EchoRoll(result.Value);
     }
 
     // Local echo with the full breakdown — used by /rollcheck and the barred-channel fallback.
