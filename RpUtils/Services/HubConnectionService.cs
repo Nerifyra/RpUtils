@@ -118,6 +118,22 @@ public sealed class HubConnectionService : IAsyncDisposable, IConnectionStatus
         }
     }
 
+    public async Task<Result> InvokeResult(string method, params object?[] args)
+    {
+        if (!IsConnected)
+            return Result.Fail("Not connected to the server.");
+
+        try
+        {
+            return await _connection!.InvokeCoreAsync<Result>(method, args, _cts.Token);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex, $"Hub call '{method}' failed.");
+            return Result.Fail("Unable to reach the server.");
+        }
+    }
+
     public async Task DisconnectAsync()
     {
         if (_connection is null) return;

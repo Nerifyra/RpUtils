@@ -87,42 +87,35 @@ public sealed class MarkersController : IMarkersController, IDisposable
             LobbyId = lobbyId,
             IconId = iconId,
         };
-        var success = await _service.UpdateMarker(marker);
-        if (!success) Notify.Error("Failed to add marker.");
+        var result = await _service.UpdateMarker(marker);
+        if (!result.Success) Notify.Error(result.Error ?? "Failed to add marker.");
     }
 
     public async Task UpdateMarker(Marker marker)
     {
-        var success = await _service.UpdateMarker(marker);
-        if (!success) Notify.Error("Failed to update marker.");
+        var result = await _service.UpdateMarker(marker);
+        if (!result.Success) Notify.Error(result.Error ?? "Failed to update marker.");
     }
 
     public async Task RemoveMarker(string id)
     {
-        var success = await _service.RemoveMarker(id);
-        if (!success) Notify.Error("Failed to remove marker.");
+        var result = await _service.RemoveMarker(id);
+        if (!result.Success) Notify.Error(result.Error ?? "Failed to remove marker.");
     }
 
     public async Task RefreshMarkers(string lobbyId)
     {
-        try
-        {
-            var markers = await _service.GetLobbyMarkers(lobbyId);
-            if (markers is null) return;
+        var result = await _service.GetLobbyMarkers(lobbyId);
+        if (!result.Success || result.Value is not { } markers) return;
 
-            // Drop cached markers for this lobby and repopulate.
-            foreach (var id in _markers.Keys.Where(id => _markers[id].LobbyId == lobbyId).ToList())
-                _markers.Remove(id);
+        // Drop cached markers for this lobby and repopulate.
+        foreach (var id in _markers.Keys.Where(id => _markers[id].LobbyId == lobbyId).ToList())
+            _markers.Remove(id);
 
-            foreach (var marker in markers)
-                _markers[marker.Id] = marker;
+        foreach (var marker in markers)
+            _markers[marker.Id] = marker;
 
-            OnStateChanged?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex, "Failed to refresh markers.");
-        }
+        OnStateChanged?.Invoke();
     }
 
     public void BeginPlacement(Marker marker) => PlacingMarker = marker;

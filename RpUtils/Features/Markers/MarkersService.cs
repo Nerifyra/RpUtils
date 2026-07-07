@@ -25,47 +25,12 @@ public sealed class MarkersService
         };
     }
 
-    public async Task<bool> UpdateMarker(Marker marker)
-    {
-        try
-        {
-            if (!_hub.IsConnected) return false;
-            await _hub.Connection!.InvokeAsync("UpdateMarker", marker);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex, "Failed to update marker.");
-            return false;
-        }
-    }
+    public Task<Result> UpdateMarker(Marker marker) =>
+        _hub.InvokeResult("UpdateMarker", marker);
 
-    public async Task<bool> RemoveMarker(string markerId)
-    {
-        try
-        {
-            if (!_hub.IsConnected) return false;
-            await _hub.Connection!.InvokeAsync("RemoveMarker", markerId);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex, "Failed to remove marker.");
-            return false;
-        }
-    }
+    public Task<Result> RemoveMarker(string markerId) =>
+        _hub.InvokeResult("RemoveMarker", markerId);
 
-    public async Task<List<Marker>?> GetLobbyMarkers(string lobbyId)
-    {
-        try
-        {
-            if (!_hub.IsConnected) return null;
-            return await _hub.Connection!.InvokeAsync<List<Marker>>("GetLobbyMarkers", lobbyId);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex, "Failed to get lobby markers.");
-            return null;
-        }
-    }
+    public Task<Result<List<Marker>>> GetLobbyMarkers(string lobbyId) =>
+        _hub.InvokeResult<List<Marker>>("GetLobbyMarkers", lobbyId);
 }
