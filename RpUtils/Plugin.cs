@@ -100,7 +100,7 @@ public sealed class Plugin : IDalamudPlugin
 
         CommandManager.AddHandler(RollCommandName, new CommandInfo(OnRollCommand)
         {
-            HelpMessage = "Roll dice, e.g. /roll 3d8+5"
+            HelpMessage = "Roll dice, e.g. /roll 3d8+5 (add 'private' to echo results locally only)"
         });
         CommandManager.AddHandler(RollCheckCommandName, new CommandInfo(OnRollCheckCommand)
         {

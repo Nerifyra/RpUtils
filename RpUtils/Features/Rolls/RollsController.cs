@@ -116,16 +116,24 @@ public sealed class RollsController : IRollsController, IDisposable
 
     public async void GenerateRoll(string args)
     {
-        if (!Chat.CurrentChannelCanMessage())
+        var (isPrivate, expression) = ParseArgs(args);
+
+        if (!isPrivate && !Chat.CurrentChannelCanMessage())
         {
             Notify.Warning("Current channel disallowed from rolling.");
             return;
         }
 
-        var result = await _service.GenerateRoll(args);
+        var result = await _service.GenerateRoll(expression);
         if (!result.Success || result.Value is not { } roll)
         {
             Chat.Echo(result.Error ?? "Unable to generate roll.");
+            return;
+        }
+
+        if (isPrivate)
+        {
+            EchoRoll(roll);
             return;
         }
 
@@ -159,5 +167,13 @@ public sealed class RollsController : IRollsController, IDisposable
     // Local echo with the full breakdown — used by /rollcheck and the barred-channel fallback.
     private static void EchoRoll(GeneratedRoll roll) =>
         Chat.Echo($"{roll.Id}: {roll.Expression} → {roll.Breakdown} = {roll.Result}");
+
+    private static (bool IsPrivate, string Expression) ParseArgs(string args)
+    {
+        var tokens = args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var isPrivate = tokens.Any(t => t.Equals("private", StringComparison.OrdinalIgnoreCase));
+        var expression = string.Join(' ', tokens.Where(t => !t.Equals("private", StringComparison.OrdinalIgnoreCase)));
+        return (isPrivate, expression);
+    }
 
 }
