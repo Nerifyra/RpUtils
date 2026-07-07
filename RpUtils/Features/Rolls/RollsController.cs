@@ -122,10 +122,10 @@ public sealed class RollsController : IRollsController, IDisposable
             return;
         }
 
-        var roll = await _service.GenerateRoll(args);
-        if (roll == null)
+        var result = await _service.GenerateRoll(args);
+        if (result.Value is not { } roll)
         {
-            Notify.Warning($"Roll '{args}' could not produce a result.");
+            Chat.Echo(result.Error ?? "Couldn't roll.");
             return;
         }
 
